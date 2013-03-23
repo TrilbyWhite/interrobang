@@ -1,0 +1,16 @@
+
+## THIS FILE IS NOT YET IN USE. THIS SERVES ONLY AS AN EXMPLE OF HOW
+## THE CONFIGURATION WILL LOOK ONCE IT IS WORKING
+
+# visual config
+font    -misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*
+bg      #121212
+fg      #E0E0E0
+
+# bangs
+term    urxvtc -e
+pdf     mupdf
+web     luakit
+man     urxvtc -e man
+
+
