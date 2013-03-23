@@ -1,5 +1,5 @@
 #Maintainer: Jesse McClure AKA "Trilby" <jmcclure [at] cns [dot] umass [dot] edu>
-pkgname=swifer-git
+pkgname=interobang-git
 pkgver=20130323
 pkgrel=1
 pkgdesc="A tiny launcher menu packing a big bang (syntax)"
