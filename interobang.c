@@ -19,7 +19,7 @@ static const Bang bangs[] = {
 	{ "term",				TERM	},
 	{ "web",				"luakit"	},
 	{ "pdf",				"mupdf"		},
-	{ "man",				TERM "man " },
+	{ "man",				TERM " man" },
 };
 
 int main(int argc, const char **argv) {	
