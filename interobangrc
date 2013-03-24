@@ -7,8 +7,12 @@
 
 font            -misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*
 #font            -xos4-terminus-medium-r-normal--14-140-72-72-c-80-iso10646-1
+geometry        top
+#geometry        bottom
+#geometry        400x16+200+200
 foreground      #68B0E0
 background      #000000
+#border          #FFFFFF
 bangchar        !
 
 # BANGS

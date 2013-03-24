@@ -13,13 +13,13 @@ typedef struct Bang {
 } Bang;
 
 static Bang *bangs;
-static int nbangs, scr, bh = 0, bw, fh;
+static int nbangs, scr, fh, x = 0, y = 0, w = 0, h = 0;
 static Display *dpy;
 static Window root, win;
 static Pixmap buf;
 static GC gc, bgc;
 static XFontStruct *fs;
-static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE";
+static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "";
 static char font[MAX_LINE] = "-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE];
 
@@ -46,6 +46,10 @@ static int config(int argc, const char **argv) {
 			c = strchr(line,'#');
 			if (c && strlen(c) > 6) strncpy(colFG,c,7);
 		}
+		else if (strncmp(line,"border ",7)==0) {
+			c = strchr(line,'#');
+			if (c && strlen(c) > 6) strncpy(colBD,c,7);
+		}
 		else if (strncmp(line,"font ",5)==0) {
 			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
 			if (strlen(c) > 12) strncpy(font,c,strlen(c)-1);
@@ -53,6 +57,13 @@ static int config(int argc, const char **argv) {
 		else if (strncmp(line,"bangchar ",9)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
 			if (*c != '\n' && *c != '\0') bangchar = *c;
+		}
+		else if (strncmp(line,"geometry ",9)==0) {
+			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
+			if (*c != '\n' && *c != '\0') {
+				if (*c == 'b') y = -1;
+				else sscanf(c,"%dx%d+%d+%d",&w,&h,&x,&y);
+			}
 		}
 		else {
 			fprintf(stderr,"unrecognized configuration entry \"%s\"\n",line);
@@ -67,7 +78,7 @@ static int init_X() {
 	if (!(dpy=XOpenDisplay(0x0))) exit(1);
 	scr = DefaultScreen(dpy);
 	root = RootWindow(dpy,scr);
-	bw = DisplayWidth(dpy,scr);
+	w = (w ? w : DisplayWidth(dpy,scr) - (strlen(colBD)?2:0));
 	Colormap cmap = DefaultColormap(dpy,scr);
 	XColor color;
 	XGCValues val;
@@ -81,15 +92,19 @@ static int init_X() {
 	val.foreground = color.pixel;
 	gc = XCreateGC(dpy,root,GCFont|GCForeground,&val);
 	fh = fs->ascent + 1;
-	if (!bh) bh = fh + fs->descent + 2;
+	if (!h) h = fh + fs->descent + 2;
+	if (y == -1) y = DisplayHeight(dpy,scr) - h;
 	XSetWindowAttributes wa;
 	wa.override_redirect = True;
-	win = XCreateWindow(dpy,root,0,0,bw,bh,0,DefaultDepth(dpy,scr),
-		InputOutput,DefaultVisual(dpy,scr),CWOverrideRedirect,&wa);
-	buf = XCreatePixmap(dpy,root,bw,bh,DefaultDepth(dpy,scr));
+	wa.border_pixel = (XAllocNamedColor(dpy,cmap,colBD,&color,&color) ?
+		color.pixel : 0);
+	win = XCreateWindow(dpy,root,x,y,w,h,(strlen(colBD)?1:0),
+		DefaultDepth(dpy,scr),InputOutput,DefaultVisual(dpy,scr),
+		CWOverrideRedirect|CWBorderPixel,&wa);
+	buf = XCreatePixmap(dpy,root,w,h,DefaultDepth(dpy,scr));
 	XMapWindow(dpy,win);
-	XFillRectangle(dpy,buf,bgc,0,0,bw,bh);
-	XCopyArea(dpy,buf,win,gc,0,0,bw,bh,0,0);
+	XFillRectangle(dpy,buf,bgc,0,0,w,h);
+	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 	XFlush(dpy);
 	return 0;
 }
@@ -157,11 +172,11 @@ static int main_loop() {
 		}
 		if (key != XK_Tab) compcheck = False;
 		/* draw */
-		XFillRectangle(dpy,buf,bgc,0,0,bw,bh);
+		XFillRectangle(dpy,buf,bgc,0,0,w,h);
 		XDrawString(dpy,buf,gc,5,fh,line,strlen(line));
 		x = XTextWidth(fs,line,strlen(line)) + 6;
 		XDrawLine(dpy,buf,gc,x,2,x,fh);
-		XCopyArea(dpy,buf,win,gc,0,0,bw,bh,0,0);
+		XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 		XFlush(dpy);
 		if (breakcode) break;
 	}
