@@ -17,9 +17,11 @@ bangchar        !
 
 # BANGS
 # The first listed bang is the default
-!term    urxvtc -e
-!pdf     mupdf
-!web     luakit
-!man     urxvtc -e man
+!term         urxvtc -e %s
+!web          luakit %s
+!pdf          mupdf %s
+!man          urxvtc -e man %s
+!archbbs      luakit https://duckduckgo.com/?q=%s%%20site%%3Abbs.archlinux.org
+!archwiki     luakit https://duckduckgo.com/?q=%s%%20site%%3Awiki.archlinux.org
 
 

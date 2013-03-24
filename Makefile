@@ -1,5 +1,5 @@
 
-PROG	=	interobang
+PROG	=	interrobang
 PREFIX	?=	/usr
 CFLAGS	+=	-lX11
 

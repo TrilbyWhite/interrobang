@@ -27,7 +27,7 @@ static int config(int argc, const char **argv) {
 	FILE *rc;
 	char *c;
 	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == '\0') rc = stdin;
-	else { chdir(getenv("HOME")); rc = fopen(".interobangrc","r"); }
+	else { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
 		if (line[0] == '#' || line[0] == '\n') continue;
@@ -207,8 +207,8 @@ static int process_command() {
 			if (strncmp(bangs[i].bang,line + 1,x) == 0)
 				b = bangs[i].command;
 		if (!b && nbangs != 0) b = bangs[0].command;
-		if (b && c) sprintf(cmd,"%s%s &",b, c);
-		else if (b)	sprintf(cmd,"%s %s &",b, line + 1);
+		if (b && c) { c++; sprintf(cmd,b,c); }
+		else if (b)	sprintf(cmd,b, line + 1);
 	}
 	else {
 		strcpy(cmd,line);

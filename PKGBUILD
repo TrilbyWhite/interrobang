@@ -1,6 +1,6 @@
 #Maintainer: Jesse McClure AKA "Trilby" <jmcclure [at] cns [dot] umass [dot] edu>
-pkgname=interobang-git
-pkgver=20130323
+pkgname=interrobang-git
+pkgver=20130324
 pkgrel=1
 pkgdesc="A tiny launcher menu packing a big bang (syntax)"
 url="http://github.com/TrilbyWhite/interobang.git"
@@ -8,8 +8,8 @@ arch=('any')
 license=('GPLv3')
 depends=('bash' 'bash-completion')
 makedepends=('git')
-_gitroot="git://github.com/TrilbyWhite/interobang.git"
-_gitname="interobang"
+_gitroot="git://github.com/TrilbyWhite/interrobang.git"
+_gitname="interrobang"
 
 build() {
     cd "$srcdir"
