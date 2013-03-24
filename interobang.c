@@ -8,8 +8,8 @@
 #define MAX_LINE	122
 
 typedef struct Bang {
-	const char *bang;
-	const char *command;
+	char *bang;
+	char *command;
 } Bang;
 
 static Bang *bangs;
@@ -179,23 +179,24 @@ static int main_loop() {
 }
 
 static int process_command() {
-	int i, x = 0; char *c;
+	int i, x = 0; char *c, *b = NULL;
 	strcpy(cmd,"");
 	if (line[0] == bangchar) { /* "bang" syntax: */
-		if ( (c=strchr(line,' ')) != NULL)
-			x = c - line - 1; /* length of bang */
-		if (line[1] == ' ' && nbangs != 0)
-			sprintf(cmd,"%s%s &",bangs[0].command, c);
-		else for (i = 0; i < nbangs; i++)
+		/* x = length of bang */
+		if ( (c=strchr(line,' ')) != NULL) x = c - line - 1;
+		else x = strlen(line + 1);
+		/* b = bang command */
+		if (x) for (i = 0; i < nbangs; i++)
 			if (strncmp(bangs[i].bang,line + 1,x) == 0)
-				sprintf(cmd,"%s%s &",bangs[i].command, c);
-		if (cmd[0] == '\0' && line[1] != '\0')
-			sprintf(cmd,"%s%s &",bangs[0].command, line[1]);
+				b = bangs[i].command;
+		if (!b && nbangs != 0) b = bangs[0].command;
+		if (b && c) sprintf(cmd,"%s%s &",b, c);
+		else if (b)	sprintf(cmd,"%s %s &",b, line + 1);
 	}
 	else {
 		strcpy(cmd,line);
 		strcat(cmd," &");
-	}
+	} 
 	if (strlen(cmd) > 2) system(cmd);
 }
 
