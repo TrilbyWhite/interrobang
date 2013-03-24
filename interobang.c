@@ -12,39 +12,75 @@ typedef struct Bang {
 	const char *command;
 } Bang;
 
-#define TERM	"urxvtc -e"
+static Bang *bangs;
+static int nbangs, scr, bh = 0, bw, fh;
+static Display *dpy;
+static Window root, win;
+static Pixmap buf;
+static GC gc, bgc;
+static XFontStruct *fs;
+static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE";
+static char font[MAX_LINE] = "-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
+static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE];
 
-static const Bang bangs[] = {
-	/* an empty bang defaults to the first entry: */
-	{ "term",				TERM	},
-	{ "web",				"luakit"	},
-	{ "pdf",				"mupdf"		},
-	{ "man",				TERM " man" },
-};
+static int config(int argc, const char **argv) {
+	FILE *rc;
+	char *c;
+	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == '\0') rc = stdin;
+	else { chdir(getenv("HOME")); rc = fopen(".interobangrc","r"); }
+	if (!rc) return -1;
+	while (fgets(line,MAX_LINE,rc) != NULL) {
+		if (line[0] == '#' || line[0] == '\n') continue;
+		else if (line[0] == bangchar && line[1] != '\0') {
+			sscanf(line+1,"%s %[^\n]",bang,cmd);
+			bangs = (Bang *) realloc(bangs,(nbangs + 1) * sizeof(Bang));
+			bangs[nbangs].bang = strdup(bang);
+			bangs[nbangs].command = strdup(cmd);
+			nbangs++;
+		}
+		else if (strncmp(line,"background ",11)==0) {
+			c = strchr(line,'#');
+			if (c && strlen(c) > 6) strncpy(colBG,c,7);
+		}
+		else if (strncmp(line,"foreground ",11)==0) {
+			c = strchr(line,'#');
+			if (c && strlen(c) > 6) strncpy(colFG,c,7);
+		}
+		else if (strncmp(line,"font ",5)==0) {
+			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
+			if (strlen(c) > 12) strncpy(font,c,strlen(c)-1);
+		}
+		else if (strncmp(line,"bangchar ",9)==0) {
+			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
+			if (*c != '\n' && *c != '\0') bangchar = *c;
+		}
+		else {
+			fprintf(stderr,"unrecognized configuration entry \"%s\"\n",line);
+		}
+	}
+	if (rc != stdin) fclose(rc);
+	strcpy(line,"");
+	return 0;
+}
 
-int main(int argc, const char **argv) {	
-/* DEFAULTS: */
-	const char *font = "-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
-	const char *colBG = "#121212";
-	const char *colFG = "#EEEEEE";
-/* INIT X */
-	Display *dpy; if (!(dpy=XOpenDisplay(0x0))) return 1;
-	int scr = DefaultScreen(dpy);
-	Window win, root = RootWindow(dpy,scr);
-	Pixmap buf;
-	int bh = 0, bw = DisplayWidth(dpy,scr);
+static int init_X() {
+	if (!(dpy=XOpenDisplay(0x0))) exit(1);
+	scr = DefaultScreen(dpy);
+	root = RootWindow(dpy,scr);
+	bw = DisplayWidth(dpy,scr);
 	Colormap cmap = DefaultColormap(dpy,scr);
 	XColor color;
 	XGCValues val;
-	XFontStruct *fs = XLoadQueryFont(dpy,font);
+	fs = XLoadQueryFont(dpy,font);
+	if (!fs) {fprintf(stderr,"unrecognized font\n"); exit(1);}
 	val.font = fs->fid;
 	XAllocNamedColor(dpy,cmap,colBG,&color,&color);
 	val.foreground = color.pixel;
-	GC bgc = XCreateGC(dpy,root,GCFont|GCForeground,&val);
+	bgc = XCreateGC(dpy,root,GCFont|GCForeground,&val);
 	XAllocNamedColor(dpy,cmap,colFG,&color,&color);
 	val.foreground = color.pixel;
-	GC gc = XCreateGC(dpy,root,GCFont|GCForeground,&val);
-	int fh = fs->ascent + 1;
+	gc = XCreateGC(dpy,root,GCFont|GCForeground,&val);
+	fh = fs->ascent + 1;
 	if (!bh) bh = fh + fs->descent + 2;
 	XSetWindowAttributes wa;
 	wa.override_redirect = True;
@@ -55,13 +91,16 @@ int main(int argc, const char **argv) {
 	XFillRectangle(dpy,buf,bgc,0,0,bw,bh);
 	XCopyArea(dpy,buf,win,gc,0,0,bw,bh,0,0);
 	XFlush(dpy);
-/* MAIN LOOP */
+	return 0;
+}
+
+static int main_loop() {
 	XEvent ev;
 	XKeyEvent *e;
 	KeySym key;
 	XGrabKeyboard(dpy,root,True,GrabModeSync,GrabModeAsync,CurrentTime);
-	int run = 1, x = 0, i, sp = 0;
-	char line[MAX_LINE + 4] = "", cmd[MAX_LINE + 24] = "", *prefix = NULL;
+	int breakcode = 0, x = 0, i, sp = 0;
+	char *prefix = NULL;
 	FILE *compgen; Bool compcheck = False;
 	char **complist = NULL; int compcount = 0, compcur = 0;
 	while (!XNextEvent(dpy,&ev)) {
@@ -69,8 +108,8 @@ int main(int argc, const char **argv) {
 		/* get key */
 		e = &ev.xkey;
 		key = XkbKeycodeToKeysym(dpy,(KeyCode)e->keycode,0,0);
-		if (key == XK_Return) run = 0;
-		else if (key == XK_Escape) run = -1;
+		if (key == XK_Return) breakcode = 1;
+		else if (key == XK_Escape) breakcode = -1;
 		else if (key == XK_Tab) {
 			if (!compcheck) {
 				if (complist) {
@@ -127,7 +166,7 @@ int main(int argc, const char **argv) {
 		XDrawLine(dpy,buf,gc,x,2,x,fh);
 		XCopyArea(dpy,buf,win,gc,0,0,bw,bh,0,0);
 		XFlush(dpy);
-		if (run != 1) break;
+		if (breakcode) break;
 	}
 	if (complist) {
 		for (i = 0; i < compcount; i++) free(complist[i]);
@@ -136,25 +175,33 @@ int main(int argc, const char **argv) {
 		compcount = 0;
 	}
 	XUngrabKeyboard(dpy,CurrentTime);
-/* PROCESS COMMAND */
-	if (run == 0) {
-		strcpy(cmd,"");
-		if (line[0] == '!') { /* tmenu "bang" syntax: */
-			prefix = strchr(line,' ');
-			x = prefix - line - 1; /* length of bang */
-			if (line[1] == ' ')
-				sprintf(cmd,"%s%s &",bangs[0].command, prefix);
-			else for (i = 0; i < sizeof(bangs)/sizeof(bangs[0]); i++)
-				if (strncmp(bangs[i].bang,line + 1,x) == 0)
-					sprintf(cmd,"%s%s &",bangs[i].command, prefix);
-		}
-		else {
-			strcpy(cmd,line);
-			strcat(cmd," &");
-		}
-		if (strlen(cmd) > 2) system(cmd);
+	return (breakcode == 1 ? 1 : 0);
+}
+
+static int process_command() {
+	int i, x; char *c;
+	strcpy(cmd,"");
+	if (line[0] == bangchar) { /* "bang" syntax: */
+		c = strchr(line,' ');
+		x = c - line - 1; /* length of bang */
+		if (line[1] == ' ' && nbangs != 0)
+			sprintf(cmd,"%s%s &",bangs[0].command, c);
+		else for (i = 0; i < nbangs; i++)
+			if (strncmp(bangs[i].bang,line + 1,x) == 0)
+				sprintf(cmd,"%s%s &",bangs[i].command, c);
 	}
-/* CLEAN UP */
+	else {
+		strcpy(cmd,line);
+		strcat(cmd," &");
+	}
+	if (strlen(cmd) > 2) system(cmd);
+}
+
+int main(int argc, const char **argv) {	
+	config(argc,argv);
+	init_X();
+	if (main_loop())
+		process_command();
 	XFreeFont(dpy,fs);
 	XDestroyWindow(dpy,win);
 	XCloseDisplay(dpy);

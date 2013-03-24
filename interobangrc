@@ -1,16 +1,21 @@
 
-## THIS FILE IS NOT YET IN USE. THIS SERVES ONLY AS AN EXMPLE OF HOW
-## THE CONFIGURATION WILL LOOK ONCE IT IS WORKING
+## InterobangRC
+##
+## Lines starting with a # are ignored as comments, but this file is
+## not processed by a shell interpreter.
 
-# visual config
-font    -misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*
-bg      #121212
-fg      #E0E0E0
 
-# bangs
-term    urxvtc -e
-pdf     mupdf
-web     luakit
-man     urxvtc -e man
+font            -misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*
+#font            -xos4-terminus-medium-r-normal--14-140-72-72-c-80-iso10646-1
+foreground      #68B0E0
+background      #000000
+bangchar        !
+
+# BANGS
+# The first listed bang is the default
+!term    urxvtc -e
+!pdf     mupdf
+!web     luakit
+!man     urxvtc -e man
 
 
