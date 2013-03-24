@@ -189,6 +189,8 @@ static int process_command() {
 		else for (i = 0; i < nbangs; i++)
 			if (strncmp(bangs[i].bang,line + 1,x) == 0)
 				sprintf(cmd,"%s%s &",bangs[i].command, c);
+		if (cmd[0] == '\0' && line[1] != '\0')
+			sprintf(cmd,"%s%s &",bangs[0].command, line[1]);
 	}
 	else {
 		strcpy(cmd,line);
