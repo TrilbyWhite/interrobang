@@ -179,11 +179,11 @@ static int main_loop() {
 }
 
 static int process_command() {
-	int i, x; char *c;
+	int i, x = 0; char *c;
 	strcpy(cmd,"");
 	if (line[0] == bangchar) { /* "bang" syntax: */
-		c = strchr(line,' ');
-		x = c - line - 1; /* length of bang */
+		if ( (c=strchr(line,' ')) != NULL)
+			x = c - line - 1; /* length of bang */
 		if (line[1] == ' ' && nbangs != 0)
 			sprintf(cmd,"%s%s &",bangs[0].command, c);
 		else for (i = 0; i < nbangs; i++)
