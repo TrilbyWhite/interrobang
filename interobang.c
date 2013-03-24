@@ -100,6 +100,7 @@ static int main_loop() {
 	KeySym key;
 	XGrabKeyboard(dpy,root,True,GrabModeSync,GrabModeAsync,CurrentTime);
 	int breakcode = 0, x = 0, i, sp = 0;
+	unsigned int mod;
 	char *prefix = NULL;
 	FILE *compgen; Bool compcheck = False;
 	char **complist = NULL; int compcount = 0, compcur = 0;
@@ -108,8 +109,15 @@ static int main_loop() {
 		/* get key */
 		e = &ev.xkey;
 		key = XkbKeycodeToKeysym(dpy,(KeyCode)e->keycode,0,0);
-		if (key == XK_Return) breakcode = 1;
+		mod = ((e->state&~Mod2Mask)&~LockMask);
+		if (mod & ControlMask) {
+			if (key == 'u') line[0] = '\0';
+		}
+		else if (key == XK_Return) breakcode = 1;
 		else if (key == XK_Escape) breakcode = -1;
+		else if (key == XK_BackSpace) line[strlen(line) - 1] = '\0';
+		else if (key == XK_Delete) line[0] = '\0';
+		else if (key == XK_space) strcat(line," ");
 		else if (key == XK_Tab) {
 			if (!compcheck) {
 				if (complist) {
@@ -141,24 +149,13 @@ static int main_loop() {
 				strcpy(line,complist[compcur]);
 			}
 		}
-		else if (key == XK_BackSpace) {
-			line[strlen(line) - 1] = '\0';
-			compcheck = False;
-		}
-		else if (key == XK_Delete) {
-			line[0] = '\0';
-			compcheck = False;
-		}
-		else if (key == XK_space) {
-			strcat(line," ");
-			sp = strlen(line);
-		}
 		else {
 			char buf[10];
 			int len = XLookupString(e,buf,9,NULL,NULL);
 			strncat(line,buf,len);
 			compcheck = False;
 		}
+		if (key != XK_Tab) compcheck = False;
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,bw,bh);
 		XDrawString(dpy,buf,gc,5,fh,line,strlen(line));
