@@ -114,9 +114,9 @@ static int main_loop() {
 	XKeyEvent *e;
 	KeySym key;
 	XGrabKeyboard(dpy,root,True,GrabModeSync,GrabModeAsync,CurrentTime);
-	int breakcode = 0, x = 0, i, sp = 0;
+	int breakcode = 0, x = 0, i;
 	unsigned int mod;
-	char *prefix = NULL;
+	char prefix[MAX_LINE+3], *sp = NULL;
 	FILE *compgen; Bool compcheck = False;
 	char **complist = NULL; int compcount = 0, compcur = 0;
 	while (!XNextEvent(dpy,&ev)) {
@@ -141,12 +141,16 @@ static int main_loop() {
 					complist = NULL;
 					compcount = 0;
 				}
-				if (sp < strlen(line)) { prefix = strdup(line); prefix[sp] = '\0'; }
-				if (prefix)
-					sprintf(cmd,"compgen -P \"%s\" -cf %s ",prefix,line + sp);
-				else
-					sprintf(cmd,"compgen -cf %s",line);
-				if (prefix) { free(prefix); prefix = NULL; }
+				if ( (sp=strrchr(line,' ')) ) {
+					sp++;
+					strcpy(prefix,line);
+					prefix[sp-line] = '\0';
+				}
+				else {
+					sp = line;
+					prefix[0] = '\0';
+				}
+				sprintf(cmd,"compgen -P \"%s\" -cf %s",prefix,sp);
 				compgen = popen(cmd,"r");
 				while (fgets(cmd,MAX_LINE,compgen) != NULL) {
 					if (strlen(cmd) < 4) continue;
@@ -162,6 +166,7 @@ static int main_loop() {
 			if (compcheck) {
 				if ( (++compcur) >= compcount ) compcur = 0;
 				strcpy(line,complist[compcur]);
+				strcat(line," ");
 			}
 		}
 		else {
