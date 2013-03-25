@@ -106,7 +106,6 @@ static int init_X() {
 	XFillRectangle(dpy,buf,bgc,0,0,w,h);
 	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 	XFlush(dpy);
-	XSetInputFocus(dpy,win,RevertToPointerRoot,CurrentTime);
 	return 0;
 }
 
@@ -114,8 +113,13 @@ static int main_loop() {
 	XEvent ev;
 	XKeyEvent *e;
 	KeySym key;
-	XGrabKeyboard(dpy,root,True,GrabModeSync,GrabModeAsync,CurrentTime);
 	int breakcode = 0, x = 0, i;
+	for (i = 0; i < 1000; i++) {
+		if (XGrabKeyboard(dpy,root,True,GrabModeAsync,GrabModeAsync,
+			CurrentTime) == GrabSuccess) break;
+		usleep(1000);
+	}
+	if (i == 1000) exit(1);
 	unsigned int mod;
 	char prefix[MAX_LINE+3], *sp = NULL;
 	FILE *compgen; Bool compcheck = False;
