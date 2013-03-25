@@ -41,7 +41,7 @@ static GC gc, bgc;
 static XFontStruct *fs;
 static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "";
 static char font[MAX_LINE] = "-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
-static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE];
+static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
 
 static int config(int argc, const char **argv) {
 	FILE *rc;
@@ -77,6 +77,10 @@ static int config(int argc, const char **argv) {
 		else if (strncmp(line,"bangchar ",9)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
 			if (*c != '\n' && *c != '\0') bangchar = *c;
+		}
+		else if (strncmp(line,"completion ",11)==0) {
+			for (c = line + 10; *c == ' ' || *c == '\t'; c++);
+			if (strlen(c) > 8) strncpy(completion,c,strlen(c)-1);
 		}
 		else if (strncmp(line,"geometry ",9)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
@@ -175,7 +179,7 @@ static int main_loop() {
 					sp = line;
 					prefix[0] = '\0';
 				}
-				sprintf(cmd,"compgen -P \"%s\" -cf %s",prefix,sp);
+				sprintf(cmd,completion,prefix,sp);
 				compgen = popen(cmd,"r");
 				while (fgets(cmd,MAX_LINE,compgen) != NULL) {
 					if (strlen(cmd) < 4) continue;

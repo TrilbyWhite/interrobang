@@ -14,6 +14,7 @@ foreground      #68B0E0
 background      #000000
 #border          #FFFFFF
 bangchar        !
+completion      compgen -P "%s" -cf %s
 
 # BANGS
 # The first listed bang is the default
