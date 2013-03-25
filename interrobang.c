@@ -217,8 +217,8 @@ static int process_command() {
 	}
 	else {
 		strcpy(cmd,line);
-		strcat(cmd," &");
 	} 
+	strcat(cmd," &");
 	if (strlen(cmd) > 2) system(cmd);
 }
 
