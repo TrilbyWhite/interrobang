@@ -106,6 +106,7 @@ static int init_X() {
 	XFillRectangle(dpy,buf,bgc,0,0,w,h);
 	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 	XFlush(dpy);
+	XSetInputFocus(dpy,win,RevertToPointerRoot,CurrentTime);
 	return 0;
 }
 
