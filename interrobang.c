@@ -157,6 +157,14 @@ static int main_loop() {
 		if (mod & ControlMask) {
 			if (key == 'u') line[0] = '\0';
 		}
+                else if (mod & ShiftMask && key == XK_Tab) {
+                        if (complist) {
+                            compcheck = True;
+                            if ( (--compcur) < 0 ) compcur = compcount - 1;
+                            strcpy(line,complist[compcur]);
+                            strcat(line," ");
+                        }
+                }
 		else if (key == XK_Return) breakcode = 1;
 		else if (key == XK_Escape) breakcode = -1;
 		else if (key == XK_BackSpace) line[strlen(line) - 1] = '\0';
@@ -204,7 +212,7 @@ static int main_loop() {
 			strncat(line,buf,len);
 			compcheck = False;
 		}
-		if (key != XK_Tab) compcheck = False;
+		if (key != XK_Tab && !(mod & ShiftMask)) compcheck = False;
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
 		XDrawString(dpy,buf,gc,5,fh,line,strlen(line));
