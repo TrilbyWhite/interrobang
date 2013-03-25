@@ -193,7 +193,10 @@ static int main_loop() {
 				if (complist) compcheck = True;
 			}
 			if (compcheck) {
-				if ( (++compcur) >= compcount ) compcur = 0;
+				if (mod & ShiftMask) {
+					if ((--compcur) < 0 ) compcur = compcount - 1;
+				}
+				else if ( (++compcur) >= compcount ) compcur = 0;
 				strcpy(line,complist[compcur]);
 				strcat(line," ");
 			}
@@ -202,9 +205,8 @@ static int main_loop() {
 			char buf[10];
 			int len = XLookupString(e,buf,9,NULL,NULL);
 			strncat(line,buf,len);
-			compcheck = False;
 		}
-		if (key != XK_Tab) compcheck = False;
+		if (key != XK_Tab && key != XK_Shift_L && key != XK_Shift_R) compcheck = False;
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
 		XDrawString(dpy,buf,gc,5,fh,line,strlen(line));
