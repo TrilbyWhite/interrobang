@@ -58,31 +58,31 @@ static int config(int argc, const char **argv) {
 			bangs[nbangs].command = strdup(cmd);
 			nbangs++;
 		}
-		else if (strncmp(line,"background ",11)==0) {
+		else if (strncmp(line,"background",10)==0) {
 			c = strchr(line,'#');
 			if (c && strlen(c) > 6) strncpy(colBG,c,7);
 		}
-		else if (strncmp(line,"foreground ",11)==0) {
+		else if (strncmp(line,"foreground",10)==0) {
 			c = strchr(line,'#');
 			if (c && strlen(c) > 6) strncpy(colFG,c,7);
 		}
-		else if (strncmp(line,"border ",7)==0) {
+		else if (strncmp(line,"border",6)==0) {
 			c = strchr(line,'#');
 			if (c && strlen(c) > 6) strncpy(colBD,c,7);
 		}
-		else if (strncmp(line,"font ",5)==0) {
+		else if (strncmp(line,"font",4)==0) {
 			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
 			if (strlen(c) > 12) strncpy(font,c,strlen(c)-1);
 		}
-		else if (strncmp(line,"bangchar ",9)==0) {
+		else if (strncmp(line,"bangchar",8)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
 			if (*c != '\n' && *c != '\0') bangchar = *c;
 		}
-		else if (strncmp(line,"completion ",11)==0) {
+		else if (strncmp(line,"completion",10)==0) {
 			for (c = line + 10; *c == ' ' || *c == '\t'; c++);
 			if (strlen(c) > 8) strncpy(completion,c,strlen(c)-1);
 		}
-		else if (strncmp(line,"geometry ",9)==0) {
+		else if (strncmp(line,"geometry",8)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
 			if (*c != '\n' && *c != '\0') {
 				if (*c == 'b') y = -1;
