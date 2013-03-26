@@ -198,7 +198,7 @@ static int main_loop() {
 				}
 				else if ( (++compcur) >= compcount ) compcur = 0;
 				strcpy(line,complist[compcur]);
-				strcat(line," ");
+				//strcat(line," ");
 			}
 		}
 		else {
