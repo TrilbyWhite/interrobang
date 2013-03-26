@@ -90,6 +90,7 @@ static int config(int argc, const char **argv) {
 			}
 		}
 		else {
+			line[strlen(line)-1] = '\0';
 			fprintf(stderr,"unrecognized configuration entry \"%s\"\n",line);
 		}
 	}
