@@ -1,12 +1,13 @@
 #Maintainer: Jesse McClure AKA "Trilby" <jmcclure [at] cns [dot] umass [dot] edu>
 pkgname=interrobang-git
-pkgver=20130324
+pkgver=20130326
 pkgrel=1
 pkgdesc="A tiny launcher menu packing a big bang (syntax)"
 url="http://github.com/TrilbyWhite/interobang.git"
 arch=('any')
 license=('GPLv3')
-depends=('bash' 'bash-completion')
+depends=('libx11')
+optdepends=('bash-completion: to use the default tab completion')
 makedepends=('git')
 _gitroot="git://github.com/TrilbyWhite/interrobang.git"
 _gitname="interrobang"
