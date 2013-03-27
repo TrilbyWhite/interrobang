@@ -129,6 +129,7 @@ static int init_X() {
 	buf = XCreatePixmap(dpy,root,w,h,DefaultDepth(dpy,scr));
 	XMapWindow(dpy,win);
 	XFillRectangle(dpy,buf,bgc,0,0,w,h);
+	XDrawLine(dpy,buf,gc,5,2,5,fh);
 	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 	XFlush(dpy);
 	return 0;
