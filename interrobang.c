@@ -25,7 +25,7 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
-#define MAX_LINE	122
+#define MAX_LINE	240
 
 typedef struct Bang {
 	char *bang;
@@ -228,21 +228,6 @@ static int main_loop() {
 	return (breakcode == 1 ? 1 : 0);
 }
 
-static char * escape(const char * line) {
-    char * escaped_str = malloc(strlen(line) * 2);
-    char * output = escaped_str;
-    while (*line) {
-        switch (*line) {
-            case '(': case ')': case '[': case ']':
-                *output++ = '\\';
-            default:
-                *output++ = *line++;
-        }
-    }
-    *output++ = '\0';
-    return escaped_str;
-}
-
 static int process_command() {
 	int i, x = 0; char *c, *b = NULL;
 	strcpy(cmd,"");
@@ -259,7 +244,7 @@ static int process_command() {
 		else if (b)	sprintf(cmd,b, line + 1);
 	}
 	else {
-		strcpy(cmd,escape(line));
+		strcpy(cmd,line);
 	} 
 	strcat(cmd," &");
 	if (strlen(cmd) > 2) system(cmd);
