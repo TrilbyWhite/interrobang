@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <locale.h>
 #include <string.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -38,7 +39,9 @@ static Display *dpy;
 static Window root, win;
 static Pixmap buf;
 static GC gc, bgc;
-static XFontStruct *fs;
+//static XFontStruct *fs;
+static XFontSet xfs;
+static XIC xic;
 static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "";
 static char font[MAX_LINE] = "-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
@@ -100,6 +103,8 @@ static int config(int argc, const char **argv) {
 }
 
 static int init_X() {
+	if ( !(setlocale(LC_CTYPE,"") && XSupportsLocale()) ) exit(-1);
+	if (XSetLocaleModifiers("") == NULL) exit(-1);
 	if (!(dpy=XOpenDisplay(0x0))) exit(1);
 	scr = DefaultScreen(dpy);
 	root = RootWindow(dpy,scr);
@@ -107,26 +112,41 @@ static int init_X() {
 	Colormap cmap = DefaultColormap(dpy,scr);
 	XColor color;
 	XGCValues val;
-	fs = XLoadQueryFont(dpy,font);
-	if (!fs) {fprintf(stderr,"unrecognized font\n"); exit(1);}
-	val.font = fs->fid;
+char **missing, **names, *def; int nmiss, i;
+xfs = XCreateFontSet(dpy,font,&missing,&nmiss,&def);
+if (!xfs) exit(-1);
+XFontStruct **fss;
+XFontsOfFontSet(xfs,&fss,&names);
+if (missing) XFreeStringList(missing);
+//	fs = XLoadQueryFont(dpy,font);
+//	if (!fs) {fprintf(stderr,"unrecognized font\n"); exit(1);}
 	XAllocNamedColor(dpy,cmap,colBG,&color,&color);
 	val.foreground = color.pixel;
-	bgc = XCreateGC(dpy,root,GCFont|GCForeground,&val);
+	bgc = XCreateGC(dpy,root,GCForeground,&val);
 	XAllocNamedColor(dpy,cmap,colFG,&color,&color);
 	val.foreground = color.pixel;
-	gc = XCreateGC(dpy,root,GCFont|GCForeground,&val);
-	fh = fs->ascent + 1;
-	if (!h) h = fh + fs->descent + 2;
+	gc = XCreateGC(dpy,root,GCForeground,&val);
+fh = fss[0]->ascent + 1;
+//	fh = fs->ascent + 1;
+if (!h) h = fh + fss[0]->descent + 2;
+//	if (!h) h = fh + fs->descent + 2;
 	if (y == -1) y = DisplayHeight(dpy,scr) - h;
+	for (i = 0; i < 1000; i++) {
+		if (XGrabKeyboard(dpy,root,True,GrabModeAsync,GrabModeAsync,
+			CurrentTime) == GrabSuccess) break;
+		usleep(1000);
+	}
 	XSetWindowAttributes wa;
 	wa.override_redirect = True;
 	wa.border_pixel = (XAllocNamedColor(dpy,cmap,colBD,&color,&color) ?
 		color.pixel : 0);
 	win = XCreateWindow(dpy,root,x,y,w,h,(strlen(colBD)?1:0),
-		DefaultDepth(dpy,scr),InputOutput,DefaultVisual(dpy,scr),
+		DefaultDepth(dpy,scr),CopyFromParent,DefaultVisual(dpy,scr),
 		CWOverrideRedirect|CWBorderPixel,&wa);
 	buf = XCreatePixmap(dpy,root,w,h,DefaultDepth(dpy,scr));
+	XIM xim = XOpenIM(dpy,NULL,NULL,NULL);
+	xic = XCreateIC(xim,XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+			XNClientWindow, win, XNFocusWindow, win, NULL);
 	XMapWindow(dpy,win);
 	XFillRectangle(dpy,buf,bgc,0,0,w,h);
 	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
@@ -139,28 +159,29 @@ static int main_loop() {
 	XKeyEvent *e;
 	KeySym key;
 	int breakcode = 0, x = 0, i;
-	for (i = 0; i < 1000; i++) {
-		if (XGrabKeyboard(dpy,root,True,GrabModeAsync,GrabModeAsync,
-			CurrentTime) == GrabSuccess) break;
-		usleep(1000);
-	}
 	if (i == 1000) exit(1);
 	unsigned int mod;
 	char prefix[MAX_LINE+3], *sp = NULL;
 	FILE *compgen; Bool compcheck = False;
-	char **complist = NULL; int compcount = 0, compcur = 0;
+	char **complist = NULL, txt[32];
+	int compcount = 0, compcur = 0, len = 0;
+	Status stat;
 	while (!XNextEvent(dpy,&ev)) {
+		if (XFilterEvent(&ev,win)) continue;
 		if (ev.type != KeyPress) continue;
 		/* get key */
 		e = &ev.xkey;
-		key = XkbKeycodeToKeysym(dpy,(KeyCode)e->keycode,0,0);
-		mod = ((e->state&~Mod2Mask)&~LockMask);
-		if (mod & ControlMask) {
+		key = NoSymbol;
+		len = XmbLookupString(xic,e,txt,sizeof txt,&key,&stat);
+		//key = XkbKeycodeToKeysym(dpy,(KeyCode)e->keycode,0,0);
+		if (stat == XBufferOverflow) continue;
+		if (mod & Mod1Mask) continue;
+		else if (mod & ControlMask) {
 			if (key == 'u') line[0] = '\0';
 		}
 		else if (key == XK_Return) breakcode = 1;
 		else if (key == XK_Escape) breakcode = -1;
-		else if (key == XK_BackSpace) line[strlen(line) - 1] = '\0';
+		else if (key == XK_BackSpace) line[strlen(line)-1]='\0'; //TODO check for wide char
 		else if (key == XK_Delete) line[0] = '\0';
 		else if (key == XK_space) strcat(line," ");
 		else if (key == XK_Tab) {
@@ -199,20 +220,21 @@ static int main_loop() {
 				}
 				else if ( (++compcur) >= compcount ) compcur = 0;
 				strcpy(line,complist[compcur]);
-				//strcat(line," ");
 			}
 		}
 		else {
-			char buf[10];
-			int len = XLookupString(e,buf,9,NULL,NULL);
-			strncat(line,buf,len);
+			if (!iscntrl(*txt)) strncat(line,txt,len);
 		}
 		if (key != XK_Tab && key != XK_Shift_L && key != XK_Shift_R) compcheck = False;
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
-		XDrawString(dpy,buf,gc,5,fh,line,strlen(line));
-		x = XTextWidth(fs,line,strlen(line)) + 6;
-		XDrawLine(dpy,buf,gc,x,2,x,fh);
+		XmbDrawString(dpy,buf,xfs,gc,5,fh,line,strlen(line));
+XRectangle r;
+XmbTextExtents(xfs,line,strlen(line),NULL,&r);
+// or TextEscapement ?
+x = r.width;
+//		x = XTextWidth(fs,line,strlen(line)) + 6;
+		XDrawLine(dpy,buf,gc,x+5,2,x+5,fh);
 		XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 		XFlush(dpy);
 		if (breakcode) break;
@@ -249,14 +271,23 @@ static int process_command() {
 	if (strlen(cmd) > 2) system(cmd);
 }
 
+static int clean_up() {
+	XFreeFontSet(dpy,xfs);
+//	XFreeFont(dpy,fs);
+	XFreeGC(dpy,bgc); XFreeGC(dpy,gc);
+	XDestroyIC(xic);
+	XFreePixmap(dpy,buf);
+	XDestroyWindow(dpy,win);
+	XCloseDisplay(dpy);
+	return 0;
+}
+
 int main(int argc, const char **argv) {	
 	config(argc,argv);
 	init_X();
 	if (main_loop())
 		process_command();
-	XFreeFont(dpy,fs);
-	XDestroyWindow(dpy,win);
-	XCloseDisplay(dpy);
+	clean_up();
 	return 0;
 }
 
