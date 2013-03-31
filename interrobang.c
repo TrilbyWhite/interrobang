@@ -112,24 +112,20 @@ static int init_X() {
 	Colormap cmap = DefaultColormap(dpy,scr);
 	XColor color;
 	XGCValues val;
-char **missing, **names, *def; int nmiss, i;
-xfs = XCreateFontSet(dpy,font,&missing,&nmiss,&def);
-if (!xfs) exit(-1);
-XFontStruct **fss;
-XFontsOfFontSet(xfs,&fss,&names);
-if (missing) XFreeStringList(missing);
-//	fs = XLoadQueryFont(dpy,font);
-//	if (!fs) {fprintf(stderr,"unrecognized font\n"); exit(1);}
+	char **missing, **names, *def; int nmiss, i;
+	xfs = XCreateFontSet(dpy,font,&missing,&nmiss,&def);
+	if (!xfs) exit(-1);
+	XFontStruct **fss;
+	XFontsOfFontSet(xfs,&fss,&names);
+	if (missing) XFreeStringList(missing);
 	XAllocNamedColor(dpy,cmap,colBG,&color,&color);
 	val.foreground = color.pixel;
 	bgc = XCreateGC(dpy,root,GCForeground,&val);
 	XAllocNamedColor(dpy,cmap,colFG,&color,&color);
 	val.foreground = color.pixel;
 	gc = XCreateGC(dpy,root,GCForeground,&val);
-fh = fss[0]->ascent + 1;
-//	fh = fs->ascent + 1;
-if (!h) h = fh + fss[0]->descent + 2;
-//	if (!h) h = fh + fs->descent + 2;
+	fh = fss[0]->ascent + 1;
+	if (!h) h = fh + fss[0]->descent + 2;
 	if (y == -1) y = DisplayHeight(dpy,scr) - h;
 	for (i = 0; i < 1000; i++) {
 		if (XGrabKeyboard(dpy,root,True,GrabModeAsync,GrabModeAsync,
@@ -164,7 +160,7 @@ static int main_loop() {
 	unsigned int mod;
 	char prefix[MAX_LINE+3], *sp = NULL;
 	FILE *compgen; Bool compcheck = False;
-	char **complist = NULL, txt[32];
+	char **complist = NULL, txt[32], *c;
 	int compcount = 0, compcur = 0, len = 0;
 	Status stat;
 	while (!XNextEvent(dpy,&ev)) {
@@ -182,9 +178,12 @@ static int main_loop() {
 		}
 		else if (key == XK_Return) breakcode = 1;
 		else if (key == XK_Escape) breakcode = -1;
-		else if (key == XK_BackSpace) line[strlen(line)-1]='\0'; //TODO check for wide char
 		else if (key == XK_Delete) line[0] = '\0';
 		else if (key == XK_space) strcat(line," ");
+		else if (key == XK_BackSpace) {
+			for (c = &line[strlen(line)-1];(*c&0xC0)==0x80; c--);
+			*c = '\0';
+		}
 		else if (key == XK_Tab) {
 			if (!compcheck) {
 				if (complist) {
@@ -274,7 +273,6 @@ static int process_command() {
 
 static int clean_up() {
 	XFreeFontSet(dpy,xfs);
-//	XFreeFont(dpy,fs);
 	XFreeGC(dpy,bgc); XFreeGC(dpy,gc);
 	XDestroyIC(xic);
 	XFreePixmap(dpy,buf);
