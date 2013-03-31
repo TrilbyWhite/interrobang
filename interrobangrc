@@ -19,11 +19,10 @@ background      #000000
 bangchar        !
 
 completion      compgen -P "%s" -cf %s
-
-# | uncomment the following line (and comment the one above) in order to have
-# | a space added after command or file names, and a trailing slash appended
-# | to directories
-#completion    compgen -P "%s" -fc %s | sort -u | while read s; do [[ -d ${s##* } ]] && echo "$s/" || echo "$s "; done
+## Optional "complex" completer
+##  adds spaces after commands and slashes after urls and escapes
+##  parentheses and square brackets
+#completion       compgen -P "%s" -fc %s | sort -u | while read s; do s=${s/\(/\\(}; s=${s/\)/\\)}; s=${s/\[/\\[}; s=${s/\]/\\]}; [[ -d ${s##* } ]] && echo "$s/" || echo "$s "; done
 
 # | BANGS
 # | The first listed bang is the default

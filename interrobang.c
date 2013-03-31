@@ -26,7 +26,7 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
-#define MAX_LINE	122
+#define MAX_LINE	240
 
 typedef struct Bang {
 	char *bang;
@@ -149,6 +149,7 @@ if (!h) h = fh + fss[0]->descent + 2;
 			XNClientWindow, win, XNFocusWindow, win, NULL);
 	XMapWindow(dpy,win);
 	XFillRectangle(dpy,buf,bgc,0,0,w,h);
+	XDrawLine(dpy,buf,gc,5,2,5,fh);
 	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 	XFlush(dpy);
 	return 0;
