@@ -48,9 +48,7 @@ static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE
 static char defaultcomp[MAX_LINE] = "";
 
 static int config(int argc, const char **argv) {
-	FILE *rc;
-	char *c;
-	int i;
+	FILE *rc; char *c; int i;
 	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == '\0') rc = stdin;
 	else { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
 	if (!rc) return -1;
@@ -60,20 +58,16 @@ static int config(int argc, const char **argv) {
 			sscanf(line+1,"%s %[^\n]",bang,cmd);
 			bangs = (Bang *) realloc(bangs,(nbangs + 1) * sizeof(Bang));
 			bangs[nbangs].bang = strdup(bang);
-			bangs[nbangs].command = strdup(cmd);
-			nbangs++;
+			bangs[nbangs++].command = strdup(cmd);
 		}
 		else if (strncmp(line,"background",10)==0) {
-			c = strchr(line,'#');
-			if (c && strlen(c) > 6) strncpy(colBG,c,7);
+			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colBG,c,7);
 		}
 		else if (strncmp(line,"foreground",10)==0) {
-			c = strchr(line,'#');
-			if (c && strlen(c) > 6) strncpy(colFG,c,7);
+			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colFG,c,7);
 		}
 		else if (strncmp(line,"border",6)==0) {
-			c = strchr(line,'#');
-			if (c && strlen(c) > 6) strncpy(colBD,c,7);
+			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colBD,c,7);
 		}
 		else if (strncmp(line,"font",4)==0) {
 			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
@@ -113,6 +107,7 @@ static int config(int argc, const char **argv) {
 }
 
 static int init_X() {
+	/* locale, open connection, basic info */
 	if ( !(setlocale(LC_CTYPE,"") && XSupportsLocale()) ) exit(-1);
 	if (XSetLocaleModifiers("") == NULL) exit(-1);
 	if (!(dpy=XOpenDisplay(0x0))) exit(1);
@@ -120,14 +115,15 @@ static int init_X() {
 	root = RootWindow(dpy,scr);
 	w = (w ? w : DisplayWidth(dpy,scr) - (strlen(colBD)?2:0));
 	Colormap cmap = DefaultColormap(dpy,scr);
-	XColor color;
-	XGCValues val;
+	XColor color; XGCValues val;
+	/* fonts */
 	char **missing, **names, *def; int nmiss, i;
 	xfs = XCreateFontSet(dpy,font,&missing,&nmiss,&def);
 	if (!xfs) exit(-1);
 	XFontStruct **fss;
 	XFontsOfFontSet(xfs,&fss,&names);
 	if (missing) XFreeStringList(missing);
+	/* graphic contexts */
 	XAllocNamedColor(dpy,cmap,colBG,&color,&color);
 	val.foreground = color.pixel;
 	bgc = XCreateGC(dpy,root,GCForeground,&val);
@@ -137,11 +133,14 @@ static int init_X() {
 	fh = fss[0]->ascent + 1;
 	if (!h) h = fh + fss[0]->descent + 2;
 	if (y == -1) y = DisplayHeight(dpy,scr) - h;
+	/* grab keys */
 	for (i = 0; i < 1000; i++) {
 		if (XGrabKeyboard(dpy,root,True,GrabModeAsync,GrabModeAsync,
 			CurrentTime) == GrabSuccess) break;
 		usleep(1000);
 	}
+	if (i == 1000) exit(1);
+	/* create window and buffer */
 	XSetWindowAttributes wa;
 	wa.override_redirect = True;
 	wa.border_pixel = (XAllocNamedColor(dpy,cmap,colBD,&color,&color) ?
@@ -150,6 +149,7 @@ static int init_X() {
 		DefaultDepth(dpy,scr),CopyFromParent,DefaultVisual(dpy,scr),
 		CWOverrideRedirect|CWBorderPixel,&wa);
 	buf = XCreatePixmap(dpy,root,w,h,DefaultDepth(dpy,scr));
+	/* input context */
 	XIM xim = XOpenIM(dpy,NULL,NULL,NULL);
 	xic = XCreateIC(xim,XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
 			XNClientWindow, win, XNFocusWindow, win, NULL);
@@ -162,17 +162,12 @@ static int init_X() {
 }
 
 static int main_loop() {
-	XEvent ev;
-	XKeyEvent *e;
-	KeySym key;
-	int breakcode = 0, x = 0, i;
-	if (i == 1000) exit(1);
+	XEvent ev; XKeyEvent *e; KeySym key;
+	int breakcode = 0, x = 0, i, compcount = 0, compcur = 0, len = 0;
 	unsigned int mod;
 	char prefix[MAX_LINE+3], *sp = NULL;
-	FILE *compgen; Bool compcheck = False;
-	char **complist = NULL, txt[32], *c, *comp;
-	int compcount = 0, compcur = 0, len = 0;
-	Status stat;
+	char **complist = NULL, txt[32], *c, *comp = NULL;
+	FILE *compgen; Bool compcheck = False; Status stat;
 	while (!XNextEvent(dpy,&ev)) {
 		if (XFilterEvent(&ev,win)) continue;
 		if (ev.type != KeyPress) continue;
@@ -180,7 +175,6 @@ static int main_loop() {
 		e = &ev.xkey;
 		key = NoSymbol;
 		len = XmbLookupString(xic,e,txt,sizeof txt,&key,&stat);
-		//key = XkbKeycodeToKeysym(dpy,(KeyCode)e->keycode,0,0);
 		if (stat == XBufferOverflow) continue;
 		if (e->state & Mod1Mask) continue;
 		if (e->state & ControlMask) {
@@ -211,15 +205,14 @@ static int main_loop() {
 					sp = line;
 					prefix[0] = '\0';
 				}
-
+				
+				comp = NULL;
 				if (line[0] == bangchar && sp != line) {
 					for (i = 0; i < nbangs; i++)
 						if (strncmp(bangs[i].bang,line,strlen(bangs[i].bang))==0)
 							comp = bangs[i].comp;
 				}
-				else {
-					comp = defaultcomp;
-				}
+				if (!comp) comp = defaultcomp;
 
 				sprintf(cmd,comp,prefix,sp);
 				compgen = popen(cmd,"r");
@@ -249,11 +242,7 @@ static int main_loop() {
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
 		XmbDrawString(dpy,buf,xfs,gc,5,fh,line,strlen(line));
-XRectangle r;
-XmbTextExtents(xfs,line,strlen(line),NULL,&r);
-// or TextEscapement ?
-x = r.width;
-//		x = XTextWidth(fs,line,strlen(line)) + 6;
+		x = XmbTextEscapement(xfs,line,strlen(line));
 		XDrawLine(dpy,buf,gc,x+5,2,x+5,fh);
 		XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 		XFlush(dpy);
@@ -273,14 +262,15 @@ static int process_command() {
 	int i, x = 0; char *c, *b = NULL;
 	strcpy(cmd,"");
 	if (line[0] == bangchar) { /* "bang" syntax: */
-		/* x = length of bang */
-		if ( (c=strchr(line,' ')) != NULL) x = c - line - 1;
+		if ( (c=strchr(line,' ')) != NULL) x = c - line - 1; /* x = length of bang */
 		else x = strlen(line + 1);
-		/* b = bang command */
-		if (x) for (i = 0; i < nbangs; i++)
+		if (x) for (i = 0; i < nbangs; i++)	/* b = bang command */
 			if (strncmp(bangs[i].bang,line + 1,x) == 0)
 				b = bangs[i].command;
-		if (!b && nbangs != 0) b = bangs[0].command;
+		if (!b && nbangs != 0) {	/* use default bang */
+			b = bangs[0].command;
+			c = line;
+		}
 		if (b && c) { c++; sprintf(cmd,b,c); }
 		else if (b)	sprintf(cmd,b, line + 1);
 	}
