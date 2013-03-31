@@ -5,32 +5,37 @@
 ## | not processed by a shell interpreter.
 
 
-font            fixed
-#font            -*-terminus-medium-r-normal--14-140-72-72-c-*-*-*
+font		fixed
+#font		-*-terminus-medium-r-normal--14-140-72-72-c-*-*-*
+geometry	top
+#geometry	bottom
+#geometry	400x16+200+200
+foreground	#68B0E0
+background	#000000
+#border		#FFFFFF
+bangchar	!
 
-geometry        top
-#geometry        bottom
-#geometry        400x16+200+200
 
-foreground      #68B0E0
-background      #000000
-#border          #FFFFFF
-
-bangchar        !
-
-completion      compgen -P "%s" -cf %s
-## Optional "complex" completer
-##  adds spaces after commands and slashes after urls and escapes
-##  parentheses and square brackets
-#completion       compgen -P "%s" -fc %s | sort -u | while read s; do s=${s/\(/\\(}; s=${s/\)/\\)}; s=${s/\[/\\[}; s=${s/\]/\\]}; [[ -d ${s##* } ]] && echo "$s/" || echo "$s "; done
-
-# | BANGS
+# | BANGS & TAB COMPLETION
 # | The first listed bang is the default
-!term         urxvtc -e %s
-!web          luakit %s
-!pdf          mupdf %s
-!man          urxvtc -e man %s
-!archbbs      luakit https://duckduckgo.com/?q=%s%%20site%%3Abbs.archlinux.org
-!archwiki     luakit https://duckduckgo.com/?q=%s%%20site%%3Awiki.archlinux.org
+# | TAB(bangname) defines completion for that bang and must be *after*
+# |     the bang definition
+# | TAB() defines the default tab completion
+
+TAB()		compgen -P "%s" -cf %s
+# | Optional "complex" completer
+# |     adds spaces after commands and slashes after urls and escapes
+# |     parentheses and square brackets
+#TAB()		compgen -P "%s" -fc %s | sort -u | while read s; do s=${s/\(/\\(}; s=${s/\)/\\)}; s=${s/\[/\\[}; s=${s/\]/\\]}; [[ -d ${s##* } ]] && echo "$s/" || echo "$s "; done
+
+!term		urxvtc -e %s
+#TAB(term)	completion for terminal commands
+!web		luakit %s
+!pdf		mupdf %s
+!man		urxvtc -e man %s
+!archbbs	luakit https://duckduckgo.com/?q=%s%%20site%%3Abbs.archlinux.org
+!archwiki	luakit https://duckduckgo.com/?q=%s%%20site%%3Awiki.archlinux.org
+#!net		<your network tool here>
+#TAB(net)	<complete network names with available essids>
 
 

@@ -31,6 +31,7 @@
 typedef struct Bang {
 	char *bang;
 	char *command;
+	char *comp;
 } Bang;
 
 static Bang *bangs;
@@ -39,16 +40,17 @@ static Display *dpy;
 static Window root, win;
 static Pixmap buf;
 static GC gc, bgc;
-//static XFontStruct *fs;
 static XFontSet xfs;
 static XIC xic;
 static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "";
 static char font[MAX_LINE] = "-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
+static char defaultcomp[MAX_LINE] = "";
 
 static int config(int argc, const char **argv) {
 	FILE *rc;
 	char *c;
+	int i;
 	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == '\0') rc = stdin;
 	else { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
 	if (!rc) return -1;
@@ -75,15 +77,23 @@ static int config(int argc, const char **argv) {
 		}
 		else if (strncmp(line,"font",4)==0) {
 			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
-			if (strlen(c) > 12) strncpy(font,c,strlen(c)-1);
+			if (strlen(c) > 4) strncpy(font,c,strlen(c)-1);
 		}
 		else if (strncmp(line,"bangchar",8)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
 			if (*c != '\n' && *c != '\0') bangchar = *c;
 		}
-		else if (strncmp(line,"completion",10)==0) {
-			for (c = line + 10; *c == ' ' || *c == '\t'; c++);
-			if (strlen(c) > 8) strncpy(completion,c,strlen(c)-1);
+		else if (strncmp(line,"TAB(",4)==0) {
+			if (line[4] == ')') {
+				for (c = line + 5; *c == ' ' || *c == '\t'; c++);
+				if (strlen(c) > 4) strncpy(defaultcomp,c,strlen(c)-1);
+			}
+			else {
+				sscanf(line,"TAB(%[^)])%*[ \t]%[^\n]",bang,cmd);
+				for (i = 0; i < nbangs; i++)
+					if (strncmp(bangs[i].bang,bang,strlen(bang))==0)
+						bangs[i].comp = strdup(cmd);
+			}
 		}
 		else if (strncmp(line,"geometry",8)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
@@ -160,7 +170,7 @@ static int main_loop() {
 	unsigned int mod;
 	char prefix[MAX_LINE+3], *sp = NULL;
 	FILE *compgen; Bool compcheck = False;
-	char **complist = NULL, txt[32], *c;
+	char **complist = NULL, txt[32], *c, *comp;
 	int compcount = 0, compcur = 0, len = 0;
 	Status stat;
 	while (!XNextEvent(dpy,&ev)) {
@@ -172,8 +182,8 @@ static int main_loop() {
 		len = XmbLookupString(xic,e,txt,sizeof txt,&key,&stat);
 		//key = XkbKeycodeToKeysym(dpy,(KeyCode)e->keycode,0,0);
 		if (stat == XBufferOverflow) continue;
-		if (mod & Mod1Mask) continue;
-		else if (mod & ControlMask) {
+		if (e->state & Mod1Mask) continue;
+		if (e->state & ControlMask) {
 			if (key == 'u') line[0] = '\0';
 		}
 		else if (key == XK_Return) breakcode = 1;
@@ -201,7 +211,18 @@ static int main_loop() {
 					sp = line;
 					prefix[0] = '\0';
 				}
-				sprintf(cmd,completion,prefix,sp);
+
+				if (line[0] == bangchar && sp != line) {
+					for (i = 0; i < nbangs; i++)
+						if (strncmp(bangs[i].bang,line,strlen(bangs[i].bang))==0)
+							comp = bangs[i].comp;
+				}
+				else {
+					comp = defaultcomp;
+				}
+
+				sprintf(cmd,comp,prefix,sp);
+		fprintf(stderr,"[%s] %s\n",comp,cmd);
 				compgen = popen(cmd,"r");
 				while (fgets(cmd,MAX_LINE,compgen) != NULL) {
 					if (strlen(cmd) < 4) continue;
