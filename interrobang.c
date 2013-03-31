@@ -222,7 +222,6 @@ static int main_loop() {
 				}
 
 				sprintf(cmd,comp,prefix,sp);
-		fprintf(stderr,"[%s] %s\n",comp,cmd);
 				compgen = popen(cmd,"r");
 				while (fgets(cmd,MAX_LINE,compgen) != NULL) {
 					if (strlen(cmd) < 4) continue;
