@@ -207,9 +207,9 @@ static int main_loop() {
 				}
 				
 				comp = NULL;
-				if (line[0] == bangchar && sp != line) {
+				if (line[0] == bangchar && line[1] != '\0') {
 					for (i = 0; i < nbangs; i++)
-						if (strncmp(bangs[i].bang,line,strlen(bangs[i].bang))==0)
+						if (strncmp(bangs[i].bang,line+1,strlen(bangs[i].bang))==0)
 							comp = bangs[i].comp;
 				}
 				if (!comp) comp = defaultcomp;
