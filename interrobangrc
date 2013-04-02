@@ -30,11 +30,20 @@ TAB()		compgen -P "%s" -cf %s
 
 !term		urxvtc -e %s
 #TAB(term)	completion for terminal commands
+
 !web		luakit %s
+
 !pdf		mupdf %s
+#TAB(pdf)	compgen -P "%s" -f ~/doc/pdfs/%s
+
 !man		urxvtc -e man %s
+
 !archbbs	luakit https://duckduckgo.com/?q=%s%%20site%%3Abbs.archlinux.org
+
 !archwiki	luakit https://duckduckgo.com/?q=%s%%20site%%3Awiki.archlinux.org
+
+!echo		echo %s
+
 #!net		<your network tool here>
 #TAB(net)	<complete network names with available essids>
 

@@ -35,7 +35,7 @@ typedef struct Bang {
 } Bang;
 
 static Bang *bangs;
-static int nbangs, scr, fh, x = 0, y = 0, w = 0, h = 0;
+static int nbangs, scr, fh, x = 0, y = 0, w = 0, h = 0, hushbang = -1;
 static Display *dpy;
 static Window root, win;
 static Pixmap buf;
@@ -48,14 +48,23 @@ static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE
 static char defaultcomp[MAX_LINE] = "";
 
 static int config(int argc, const char **argv) {
-	FILE *rc; char *c; int i;
-	if (argc > 1 && argv[1][0] == '-' && argv[1][1] == '\0') rc = stdin;
-	else { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
+	FILE *rc=NULL; char *c; int i;
+	const char *hushbangstr = NULL;
+	for (i = 1; i < argc; i++) {
+		if (argv[i][0] == '-') {
+			if (argv[i][1] == '\0') rc = stdin;
+			else fprintf(stderr,"unrecognized parameter \"%s\"\n",argv[i]);
+		}
+		else hushbangstr = argv[i];
+	}
+	if (!rc) { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
 		if (line[0] == '#' || line[0] == '\n') continue;
 		else if (line[0] == bangchar && line[1] != '\0') {
 			sscanf(line+1,"%s %[^\n]",bang,cmd);
+			if (hushbangstr && strncmp(bang,hushbangstr,strlen(bang))==0)
+				hushbang = nbangs;
 			bangs = (Bang *) realloc(bangs,(nbangs + 1) * sizeof(Bang));
 			bangs[nbangs].bang = strdup(bang);
 			bangs[nbangs++].command = strdup(cmd);
@@ -262,9 +271,11 @@ static int process_command() {
 	int i, x = 0; char *c, *b = NULL;
 	strcpy(cmd,"");
 	if (line[0] == bangchar) { /* "bang" syntax: */
-		if ( (c=strchr(line,' ')) != NULL) x = c - line - 1; /* x = length of bang */
+		/* x = length of bang */
+		if ( (c=strchr(line,' ')) != NULL) x = c - line - 1;
 		else x = strlen(line + 1);
-		if (x) for (i = 0; i < nbangs; i++)	/* b = bang command */
+		/* b = bang command */
+		if (x) for (i = 0; i < nbangs; i++)
 			if (strncmp(bangs[i].bang,line + 1,x) == 0)
 				b = bangs[i].command;
 		if (!b && nbangs != 0) {	/* use default bang */
@@ -275,7 +286,8 @@ static int process_command() {
 		else if (b)	sprintf(cmd,b, line + 1);
 	}
 	else {
-		strcpy(cmd,line);
+		if (hushbang > -1) sprintf(cmd,bangs[hushbang].command,line);
+		else strcpy(cmd,line);
 	} 
 	strcat(cmd," &");
 	if (strlen(cmd) > 2) system(cmd);
