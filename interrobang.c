@@ -79,6 +79,11 @@ static int config(int argc, const char **argv) {
 		}
 		else hushbangstr = argv[i];
 	}
+	if (!rc) {
+		chdir(getenv("XDG_CONFIG_HOME"));
+		chdir("interrobang");
+		rc = fopen("config","r");
+	}
 	if (!rc) { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
