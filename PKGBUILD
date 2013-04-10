@@ -3,7 +3,6 @@ pkgname=interrobang-git
 _gitname="interrobang"
 pkgver=0.41.467978d
 pkgrel=1
-epoch=1
 pkgdesc="A tiny launcher menu packing a big bang (syntax)"
 url="http://github.com/TrilbyWhite/interobang.git"
 arch=('any')
