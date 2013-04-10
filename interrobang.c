@@ -147,8 +147,11 @@ static int config(int argc, const char **argv) {
 
 static int init_X() {
 	/* locale, open connection, basic info */
-	if ( !(setlocale(LC_CTYPE,"") && XSupportsLocale()) ) exit(-1);
-	if (XSetLocaleModifiers("") == NULL) exit(-1);
+	if ( !setlocale(LC_CTYPE,"")  ) exit(2);
+	if ( !XSupportsLocale() ) exit(3);
+	if (XSetLocaleModifiers("") == NULL) exit(4);
+//	if ( !(setlocale(LC_CTYPE,"") && XSupportsLocale()) ) exit(-1);
+//	if (XSetLocaleModifiers("") == NULL) exit(-1);
 	if (!(dpy=XOpenDisplay(0x0))) exit(1);
 	scr = DefaultScreen(dpy);
 	root = RootWindow(dpy,scr);
