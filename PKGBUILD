@@ -1,7 +1,9 @@
 #Maintainer: Jesse McClure AKA "Trilby" <jmcclure [at] cns [dot] umass [dot] edu>
 pkgname=interrobang-git
-pkgver=20130326
+_gitname="interrobang"
+pkgver=0.41.467978d
 pkgrel=1
+epoch=1
 pkgdesc="A tiny launcher menu packing a big bang (syntax)"
 url="http://github.com/TrilbyWhite/interobang.git"
 arch=('any')
@@ -9,28 +11,20 @@ license=('GPLv3')
 depends=('libx11')
 optdepends=('bash-completion: to use the default tab completion')
 makedepends=('git')
-_gitroot="git://github.com/TrilbyWhite/interrobang.git"
-_gitname="interrobang"
+source=("$_gitname::git://github.com/TrilbyWhite/interrobang.git")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "${srcdir}/$_gitname"
+    echo "0.$(git rev-list --count HEAD).$(git describe --always)"
+}
 
 build() {
-    cd "$srcdir"
-    msg "Connecting to GIT server...."
-    if [ -d $_gitname ] ; then
-        cd $_gitname && git pull origin
-        msg "The local files are updated."
-    else
-        git clone $_gitroot $_gitname
-    fi
-    msg "GIT checkout done or server timeout"
-    msg "Starting make..."
-    rm -rf "$srcdir/$_gitname-build"
-    git clone "$srcdir/$_gitname" "$srcdir/$_gitname-build"
-    cd "$srcdir/$_gitname-build"
+    cd "${srcdir}/$_gitname"
 	make
 }
 
 package() {
-	cd "$srcdir/$_gitname-build"
-	make PREFIX=/usr DESTDIR=$pkgdir install
+	cd "${srcdir}/$_gitname"
+	make PREFIX=/usr DESTDIR="${pkgdir}" install
 }
-
