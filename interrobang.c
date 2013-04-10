@@ -26,6 +26,20 @@
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
+#define VERSION_STRING \
+	"INTERROBANG, version 0.1\n" \
+	"Copyright (C) 2013 Jesse McClure\n" \
+	"License GPLv3 <http://gnu.org/licenses/gpl.html>\n"
+
+#define HELP_STRING \
+	"\nUsage: %s [option] [hushbang]\n\n" \
+	"Options:\n\t-h\tShow this help message and exit.\n" \
+	"\t-v\tShow version information and exit.\n" \
+	"\t-\tOverride ~/.interrobangrc with configuration read from stdin\n\n" \
+	"Hushbang:\n\tProvide any bang (without bangchar) to have the associated\n" \
+	"\tcommmand executed on the input string\n\n" \
+	"See `man interrobang` for more information.\n"
+
 #define MAX_LINE	240
 
 typedef struct Bang {
@@ -47,12 +61,20 @@ static char font[MAX_LINE] = "-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
 static char defaultcomp[MAX_LINE] = "";
 
+static Bool show_opts = False;
+
 static int config(int argc, const char **argv) {
 	FILE *rc=NULL; char *c; int i;
 	const char *hushbangstr = NULL;
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
-			if (argv[i][1] == '\0') rc = stdin;
+			char flag = (argv[i][1] == '-' ? argv[i][2] : argv[i][1]);
+			if (flag == '\0') rc = stdin;
+			else if (flag == 'v') { printf(VERSION_STRING); exit(0); }
+			else if (flag == 'h') {
+				printf(VERSION_STRING HELP_STRING,argv[0]);
+				exit(0);
+			}
 			else fprintf(stderr,"unrecognized parameter \"%s\"\n",argv[i]);
 		}
 		else hushbangstr = argv[i];
@@ -68,6 +90,9 @@ static int config(int argc, const char **argv) {
 			bangs = (Bang *) realloc(bangs,(nbangs + 1) * sizeof(Bang));
 			bangs[nbangs].bang = strdup(bang);
 			bangs[nbangs++].command = strdup(cmd);
+		}
+		else if (strncmp(line,"show options",12)==0) {
+			show_opts = True;
 		}
 		else if (strncmp(line,"background",10)==0) {
 			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colBG,c,7);
@@ -235,6 +260,17 @@ static int main_loop() {
 				}
 				pclose(compgen);
 				if (complist) compcheck = True;
+				if (show_opts) {
+					XResizeWindow(dpy,win,w,h*(compcount+1));
+					XFillRectangle(dpy,win,bgc,0,h+2,w,h*compcount);
+					int row;
+					for (row = 0; row < compcount; row++) {
+						XmbDrawString(dpy,win,xfs,gc,5,(row+1)*h+fh,complist[row],
+								strlen(complist[row]));
+				
+					}
+					XFlush(dpy);
+				}
 			}
 			if (compcheck) {
 				if (mod & ShiftMask) {
@@ -246,6 +282,7 @@ static int main_loop() {
 		}
 		else {
 			if (!iscntrl(*txt)) strncat(line,txt,len);
+			if (show_opts) XResizeWindow(dpy,win,w,h);
 		}
 		if (key != XK_Tab && key != XK_Shift_L && key != XK_Shift_R) compcheck = False;
 		/* draw */

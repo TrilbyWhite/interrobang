@@ -14,7 +14,7 @@ foreground	#68B0E0
 background	#000000
 #border		#FFFFFF
 bangchar	!
-
+#show options
 
 # | BANGS & TAB COMPLETION
 # | The first listed bang is the default
