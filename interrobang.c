@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <locale.h>
 #include <string.h>
 #include <X11/Xlib.h>
@@ -145,14 +146,19 @@ static int config(int argc, const char **argv) {
 	return 0;
 }
 
+static int die(const char *msg,...) {
+	fprintf(stderr,"INTERROBANG: Error ");
+	va_list arg; va_start(arg,msg);
+	vfprintf(stderr,msg,arg);
+	va_end(arg);
+	exit(1);
+}
+
 static int init_X() {
 	/* locale, open connection, basic info */
-	if ( !setlocale(LC_CTYPE,"")  ) exit(2);
-	if ( !XSupportsLocale() ) exit(3);
-	if (XSetLocaleModifiers("") == NULL) exit(4);
-//	if ( !(setlocale(LC_CTYPE,"") && XSupportsLocale()) ) exit(-1);
-//	if (XSetLocaleModifiers("") == NULL) exit(-1);
-	if (!(dpy=XOpenDisplay(0x0))) exit(1);
+	if ( !(setlocale(LC_CTYPE,"") && XSupportsLocale()) ) die("setting locale\n");
+	if (XSetLocaleModifiers("") == NULL) die("setting modifiers\n");
+	if (!(dpy=XOpenDisplay(0x0))) die("opening display\n");
 	scr = DefaultScreen(dpy);
 	root = RootWindow(dpy,scr);
 	w = (w ? w : DisplayWidth(dpy,scr) - (strlen(colBD)?2:0));
@@ -161,7 +167,7 @@ static int init_X() {
 	/* fonts */
 	char **missing, **names, *def; int nmiss, i;
 	xfs = XCreateFontSet(dpy,font,&missing,&nmiss,&def);
-	if (!xfs) exit(-1);
+	if (!xfs) die("loading font \"%s\"\n",font);
 	XFontStruct **fss;
 	XFontsOfFontSet(xfs,&fss,&names);
 	if (missing) XFreeStringList(missing);
@@ -181,7 +187,7 @@ static int init_X() {
 			CurrentTime) == GrabSuccess) break;
 		usleep(1000);
 	}
-	if (i == 1000) exit(1);
+	if (i == 1000) die("grabbing keyboard\n");
 	/* create window and buffer */
 	XSetWindowAttributes wa;
 	wa.override_redirect = True;
