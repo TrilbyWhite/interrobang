@@ -111,7 +111,7 @@ static int config(int argc, const char **argv) {
 		}
 		else if (strncmp(line,"font",4)==0) {
 			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
-			if (strlen(c) > 4) strncpy(font,c,strlen(c)-1);
+			if (strlen(c) > 4) strncpy(font,c,strlen(c)+1);
 		}
 		else if (strncmp(line,"bangchar",8)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
@@ -263,8 +263,10 @@ static int main_loop() {
 				if (!comp) comp = defaultcomp;
 
 				sprintf(cmd,comp,prefix,sp);
+		fprintf(stderr,"COMPGEN: [%s]\n",cmd);
 				compgen = popen(cmd,"r");
 				while (fgets(cmd,MAX_LINE,compgen) != NULL) {
+		fprintf(stderr,"-> [%s]\n",cmd);
 					if (strlen(cmd) < 4) continue;
 					cmd[strlen(cmd) - 1] = '\0'; /* trim newlines */
 					compcount++;
