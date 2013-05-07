@@ -284,10 +284,8 @@ static int main_loop() {
 				if (!comp) comp = defaultcomp;
 
 				sprintf(cmd,comp,prefix,sp);
-		fprintf(stderr,"COMPGEN: [%s]\n",cmd);
 				compgen = popen(cmd,"r");
 				while (fgets(cmd,MAX_LINE,compgen) != NULL) {
-		fprintf(stderr,"-> [%s]\n",cmd);
 					if (strlen(cmd) < 4) continue;
 					cmd[strlen(cmd) - 1] = '\0'; /* trim newlines */
 					compcount++;
@@ -321,7 +319,8 @@ static int main_loop() {
 			if (!iscntrl(*txt)) strncat(line,txt,len);
 			if (show_opts) XResizeWindow(dpy,win,w,h);
 		}
-		if (key != XK_Tab && key != XK_Shift_L && key != XK_Shift_R) compcheck = False;
+		if (key != XK_Tab && key != XK_Shift_L && key != XK_Shift_R)
+			compcheck = False;
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
 		XmbDrawString(dpy,buf,xfs,gc,5,fh,line,strlen(line));
@@ -380,8 +379,7 @@ static int clean_up() {
 int main(int argc, const char **argv) {	
 	config(argc,argv);
 	init_X();
-	if (main_loop())
-		process_command();
+	if (main_loop()) process_command();
 	clean_up();
 	return 0;
 }
