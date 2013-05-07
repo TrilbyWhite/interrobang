@@ -26,6 +26,7 @@
 #include <string.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/Xatom.h>
 
 #define VERSION_STRING \
 	"INTERROBANG, version 0.1\n" \
@@ -235,6 +236,26 @@ static int main_loop() {
 		else if (key == XK_BackSpace) {
 			for (c = &line[strlen(line)-1];(*c&0xC0)==0x80; c--);
 			*c = '\0';
+		}
+		else if (key == XK_Insert && (e->state & ShiftMask)) {
+			Window w;
+			int fmt, res;
+			unsigned long len, rem;
+			unsigned char *s = NULL;
+			XEvent e;
+			Atom type;
+			Window sel = XGetSelectionOwner(dpy, XA_PRIMARY);
+			if (sel) {
+				XConvertSelection(dpy,XA_PRIMARY,XA_STRING,None,sel,CurrentTime);
+				XFlush(dpy);
+				XMaskEvent(dpy,SelectionNotify,&e);
+				XGetWindowProperty(dpy,sel,XA_STRING,0,256,False,AnyPropertyType,
+						&type, &fmt, &len, &rem, &s);
+				if (s) {
+					strcat(line,s);
+					XFree(s);
+				}
+			}
 		}
 		else if (key == XK_Tab) {
 			if (!compcheck) {
