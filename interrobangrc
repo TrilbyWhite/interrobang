@@ -42,6 +42,9 @@ TAB()		compgen -P "%s" -cf %s
 
 !archwiki	luakit https://duckduckgo.com/?q=%s%%20site%%3Awiki.archlinux.org
 
+!calc		echo "I never get to run %s"
+TAB(calc)	S1="%s%s"; S2="${S1/\!calc/}"; echo "!calc $(echo $S2 | bc -l)"
+
 # | Uncomment and create a ~/.myprograms file to select from a list of
 # | favorite programs
 #!fav          %s
