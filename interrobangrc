@@ -50,6 +50,9 @@ TAB(calc)	S1="%s%s"; S2="${S1/\!calc/}"; echo "!calc $(echo $S2 | bc -l)"
 #!fav          %s
 #TAB(fav)      pre="%s"; grep "%s" ~/.myprograms | while read match; do echo "${pre}${match}"; done
 
+!?			%s
+TAB(?)      ignore="%s%s"; grep -o -E "^\![[:alnum:]]+" ~/.interrobangrc
+
 #!net		<your network tool here>
 #TAB(net)	<complete network names with available essids>
 
