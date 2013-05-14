@@ -14,7 +14,7 @@ foreground	#68B0E0
 background	#000000
 #border		#FFFFFF
 bangchar	!
-#show options
+#show		options
 
 # | BANGS & TAB COMPLETION
 # | The first listed bang is the default
@@ -22,38 +22,27 @@ bangchar	!
 # |     the bang definition
 # | TAB() defines the default tab completion
 
+!term		urxvtc -e %s
+!web		luakit %s
+!pdf		mupdf %s
+!man		urxvtc -e man %s
+!archbbs	luakit https://duckduckgo.com/?q=%s%%20site%%3Abbs.archlinux.org
+!archwiki	luakit https://duckduckgo.com/?q=%s%%20site%%3Awiki.archlinux.org
+!calc		echo "interrobang ignored \"%s\""
+!?			echo "interrobang ignored \"%s\""
+#!fav          %s
+#!net		<your network tool here>
+
 TAB()		compgen -P "%s" -cf %s
 # | Optional "complex" completer
 # |     adds spaces after commands and slashes after urls and escapes
 # |     parentheses and square brackets
 #TAB()		compgen -P "%s" -fc %s | sort -u | while read s; do s=${s/\(/\\(}; s=${s/\)/\\)}; s=${s/\[/\\[}; s=${s/\]/\\]}; [[ -d ${s##* } ]] && echo "$s/" || echo "$s "; done
-
-!term		urxvtc -e %s
 #TAB(term)	completion for terminal commands
-
-!web		luakit %s
-
-!pdf		mupdf %s
 #TAB(pdf)	compgen -P "%s" -f ~/doc/pdfs/%s
-
-!man		urxvtc -e man %s
-
-!archbbs	luakit https://duckduckgo.com/?q=%s%%20site%%3Abbs.archlinux.org
-
-!archwiki	luakit https://duckduckgo.com/?q=%s%%20site%%3Awiki.archlinux.org
-
-!calc		echo "I never get to run %s"
 TAB(calc)	S1="%s%s"; S2="${S1/\!calc/}"; echo "!calc $(echo $S2 | bc -l)"
-
-# | Uncomment and create a ~/.myprograms file to select from a list of
-# | favorite programs
-#!fav          %s
-#TAB(fav)      pre="%s"; grep "%s" ~/.myprograms | while read match; do echo "${pre}${match}"; done
-
-!?			%s
 TAB(?)      ignore="%s%s"; grep -o -E "^\![[:alnum:]]+" ~/.interrobangrc
-
-#!net		<your network tool here>
+#TAB(fav)      pre="%s"; grep "%s" ~/.myprograms | while read match; do echo "${pre}${match}"; done
 #TAB(net)	<complete network names with available essids>
 
 
