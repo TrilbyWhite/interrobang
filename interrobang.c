@@ -98,8 +98,9 @@ static int config(int argc, const char **argv) {
 			bangs[nbangs].bang = strdup(bang);
 			bangs[nbangs++].command = strdup(cmd);
 		}
-		else if (strncmp(line,"show options",12)==0) {
-			show_opts = True;
+		else if (strncmp(line,"show",4)==0) {
+			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
+			if (*c == 'o') show_opts = True;
 		}
 		else if (strncmp(line,"background",10)==0) {
 			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colBG,c,7);
@@ -212,7 +213,7 @@ static int init_X() {
 
 static int main_loop() {
 	XEvent ev; XKeyEvent *e; KeySym key;
-	int breakcode = 0, x = 0, i, compcount = 0, compcur = 0, len = 0;
+	int breakcode = 0, tx = 0, i, compcount = 0, compcur = 0, len = 0;
 	unsigned int mod;
 	char prefix[MAX_LINE+3], *sp = NULL;
 	char **complist = NULL, txt[32], *c, *comp = NULL;
@@ -296,7 +297,9 @@ static int main_loop() {
 				pclose(compgen);
 				if (complist) compcheck = True;
 				if (show_opts) {
-					XResizeWindow(dpy,win,w,h*(compcount+1));
+					XMoveResizeWindow(dpy,win,x,
+							(y + h*(compcount+1) < DisplayHeight(dpy,scr) ?
+							y : y-h*compcount), w,h*(compcount+1));
 					XFillRectangle(dpy,win,bgc,0,h+2,w,h*compcount);
 					int row;
 					for (row = 0; row < compcount; row++) {
@@ -324,8 +327,8 @@ static int main_loop() {
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
 		XmbDrawString(dpy,buf,xfs,gc,5,fh,line,strlen(line));
-		x = XmbTextEscapement(xfs,line,strlen(line));
-		XDrawLine(dpy,buf,gc,x+5,2,x+5,fh);
+		tx = XmbTextEscapement(xfs,line,strlen(line));
+		XDrawLine(dpy,buf,gc,tx+5,2,tx+5,fh);
 		XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 		XFlush(dpy);
 		if (breakcode) break;
