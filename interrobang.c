@@ -277,7 +277,10 @@ static int main_loop() {
 				}
 				
 				comp = NULL;
-				if (line[0] == bangchar && line[1] != '\0') {
+				if (hushbang > -1) {
+					comp = bangs[hushbang].comp;
+				}
+				else if (line[0] == bangchar && line[1] != '\0') {
 					for (i = 0; i < nbangs; i++)
 						if (strncmp(bangs[i].bang,line+1,strlen(bangs[i].bang))==0)
 							comp = bangs[i].comp;
