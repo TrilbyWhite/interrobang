@@ -67,7 +67,7 @@ static Bool show_opts = False;
 
 static int config(int argc, const char **argv) {
 	FILE *rc=NULL; char *c; int i;
-	const char *hushbangstr = NULL;
+	const char *hushbangstr = NULL, *cwd = getenv("PWD");
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			char flag = (argv[i][1] == '-' ? argv[i][2] : argv[i][1]);
@@ -87,6 +87,7 @@ static int config(int argc, const char **argv) {
 		rc = fopen("config","r");
 	}
 	if (!rc) { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
+	chdir(cwd);
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
 		if (line[0] == '#' || line[0] == '\n') continue;
