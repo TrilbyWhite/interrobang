@@ -52,6 +52,7 @@ typedef struct Bang {
 
 static Bang *bangs;
 static int nbangs, scr, fh, x = 0, y = 0, w = 0, h = 0, hushbang = -1;
+static int precomp = 0;
 static Display *dpy;
 static Window root, win;
 static Pixmap buf;
@@ -59,7 +60,8 @@ static GC gc, bgc;
 static XFontSet xfs;
 static XIC xic;
 static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "";
-static char font[MAX_LINE] = "-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
+static char font[MAX_LINE] =
+		"-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
 static char defaultcomp[MAX_LINE] = "";
 
@@ -158,7 +160,8 @@ static int die(const char *msg,...) {
 
 static int init_X() {
 	/* locale, open connection, basic info */
-	if ( !(setlocale(LC_CTYPE,"") && XSupportsLocale()) ) die("setting locale\n");
+	if ( !(setlocale(LC_CTYPE,"") && XSupportsLocale()) )
+			die("setting locale\n");
 	if (XSetLocaleModifiers("") == NULL) die("setting modifiers\n");
 	if (!(dpy=XOpenDisplay(0x0))) die("opening display\n");
 	scr = DefaultScreen(dpy);
@@ -229,6 +232,7 @@ static int main_loop() {
 		if (e->state & Mod1Mask) continue;
 		if (e->state & ControlMask) {
 			if (key == 'u') line[0] = '\0';
+			if (key == 'c') line[precomp] = '\0';
 		}
 		else if (key == XK_Return) breakcode = 1;
 		else if (key == XK_Escape) breakcode = -1;
@@ -247,10 +251,12 @@ static int main_loop() {
 			Atom type;
 			Window sel = XGetSelectionOwner(dpy, XA_PRIMARY);
 			if (sel) {
-				XConvertSelection(dpy,XA_PRIMARY,XA_STRING,None,sel,CurrentTime);
+				XConvertSelection(dpy,XA_PRIMARY,XA_STRING,None,sel,
+						CurrentTime);
 				XFlush(dpy);
 				XMaskEvent(dpy,SelectionNotify,&e);
-				XGetWindowProperty(dpy,sel,XA_STRING,0,256,False,AnyPropertyType,
+				XGetWindowProperty(dpy,sel,XA_STRING,0,256,False,
+						AnyPropertyType,
 						&type, &fmt, &len, &rem, &s);
 				if (s) {
 					strcat(line,s);
@@ -260,6 +266,7 @@ static int main_loop() {
 		}
 		else if (key == XK_Tab) {
 			if (!compcheck) {
+				precomp = strlen(line);
 				if (complist) {
 					for (i = 0; i < compcount; i++) free(complist[i]);
 					free(complist);
@@ -275,18 +282,17 @@ static int main_loop() {
 					sp = line;
 					prefix[0] = '\0';
 				}
-				
 				comp = NULL;
 				if (hushbang > -1) {
 					comp = bangs[hushbang].comp;
 				}
 				else if (line[0] == bangchar && line[1] != '\0') {
 					for (i = 0; i < nbangs; i++)
-						if (strncmp(bangs[i].bang,line+1,strlen(bangs[i].bang))==0)
+						if (strncmp(bangs[i].bang,line+1,
+								strlen(bangs[i].bang))==0)
 							comp = bangs[i].comp;
 				}
 				if (!comp) comp = defaultcomp;
-
 				sprintf(cmd,comp,prefix,sp);
 				compgen = popen(cmd,"r");
 				while (fgets(cmd,MAX_LINE,compgen) != NULL) {
@@ -306,8 +312,8 @@ static int main_loop() {
 					XFillRectangle(dpy,win,bgc,0,h+2,w,h*compcount);
 					int row;
 					for (row = 0; row < compcount; row++) {
-						XmbDrawString(dpy,win,xfs,gc,5,(row+1)*h+fh,complist[row],
-								strlen(complist[row]));
+						XmbDrawString(dpy,win,xfs,gc,5,(row+1)*h+fh,
+								complist[row],strlen(complist[row]));
 				
 					}
 					XFlush(dpy);
