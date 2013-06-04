@@ -56,7 +56,7 @@ static int precomp = 0;
 static Display *dpy;
 static Window root, win;
 static Pixmap buf;
-static GC gc, bgc;
+static GC gc, bgc, ogc, osgc;
 static XFontSet xfs;
 static XIC xic;
 static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "";
@@ -65,6 +65,7 @@ static char font[MAX_LINE] =
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
 static char defaultcomp[MAX_LINE] = "";
 static Bool show_opts = False, autocomplete = False;
+static char opt_col[4][8] = {"#242424","#48E084","#484848","#64FFAA"};
 
 static int config(int argc, const char **argv) {
 	FILE *rc=NULL; char *c; int i;
@@ -106,6 +107,10 @@ static int config(int argc, const char **argv) {
 		}
 		else if (strncmp(line,"autocomplete",11)==0) {
 			autocomplete = True;
+		}
+		else if (strncmp(line,"options",7)==0) {
+			sscanf(line,"options %7s %7s %7s %7s",
+					opt_col[0],opt_col[1],opt_col[2],opt_col[3]);
 		}
 		else if (strncmp(line,"background",10)==0) {
 			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colBG,c,7);
@@ -186,6 +191,16 @@ static int init_X() {
 	XAllocNamedColor(dpy,cmap,colFG,&color,&color);
 	val.foreground = color.pixel;
 	gc = XCreateGC(dpy,root,GCForeground,&val);
+	XAllocNamedColor(dpy,cmap,opt_col[0],&color,&color);
+	val.background = color.pixel;
+	XAllocNamedColor(dpy,cmap,opt_col[1],&color,&color);
+	val.foreground = color.pixel;
+	ogc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
+	XAllocNamedColor(dpy,cmap,opt_col[2],&color,&color);
+	val.background = color.pixel;
+	XAllocNamedColor(dpy,cmap,opt_col[3],&color,&color);
+	val.foreground = color.pixel;
+	osgc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
 	fh = fss[0]->ascent + 1;
 	if (!h) h = fh + fss[0]->descent + 2;
 	if (y == -1) y = DisplayHeight(dpy,scr) - h;
@@ -222,6 +237,18 @@ static int init_X() {
 		XPutBackEvent(dpy,(XEvent *) &e); XFlush(dpy);
 	}
 	return 0;
+}
+
+static int options(int n, const char **opt, int cur, int x) {
+	int i = n - 1, wx = w, tx;
+	while (wx > x && i >= 0) {
+		tx = XmbTextEscapement(xfs,opt[i],strlen(opt[i]));
+		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),
+				fh,opt[i],strlen(opt[i]));
+		tx = XmbTextEscapement(xfs," ",1);
+		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),fh," ",1);
+		i--;
+	}
 }
 
 static int main_loop() {
@@ -316,19 +343,7 @@ static int main_loop() {
 				}
 				pclose(compgen);
 				if (complist) compcheck = True;
-				if (show_opts) {
-					XMoveResizeWindow(dpy,win,x,
-							(y + h*(compcount+1) < DisplayHeight(dpy,scr) ?
-							y : y-h*compcount), w,h*(compcount+1));
-					XFillRectangle(dpy,win,bgc,0,h+2,w,h*compcount);
-					int row;
-					for (row = 0; row < compcount; row++) {
-						XmbDrawString(dpy,win,xfs,gc,5,(row+1)*h+fh,
-								complist[row],strlen(complist[row]));
-				
-					}
-					XFlush(dpy);
-				}
+				compcur = -1;
 			}
 			if (compcheck) {
 				if ( (key==XK_Tab && (mod&ShiftMask)) || key == XK_Up ) {
@@ -340,7 +355,6 @@ static int main_loop() {
 		}
 		else {
 			if (!iscntrl(*txt)) strncat(line,txt,len);
-			if (show_opts) XResizeWindow(dpy,win,w,h);
 		}
 		if ( ! ((key==XK_Tab) || (key==XK_Shift_L) || (key== XK_Shift_R) ||
 				(key==XK_Down) || (key==XK_Up) ))
@@ -350,6 +364,8 @@ static int main_loop() {
 		XmbDrawString(dpy,buf,xfs,gc,5,fh,line,strlen(line));
 		tx = XmbTextEscapement(xfs,line,strlen(line));
 		XDrawLine(dpy,buf,gc,tx+5,2,tx+5,fh);
+		if (show_opts && compcheck)
+			options(compcount,(const char **)complist,compcur,tx + 40);
 		XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 		XFlush(dpy);
 		if (breakcode) break;
