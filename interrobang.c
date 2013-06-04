@@ -64,8 +64,7 @@ static char font[MAX_LINE] =
 		"-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
 static char defaultcomp[MAX_LINE] = "";
-
-static Bool show_opts = False;
+static Bool show_opts = False, autocomplete = False;
 
 static int config(int argc, const char **argv) {
 	FILE *rc=NULL; char *c; int i;
@@ -104,6 +103,9 @@ static int config(int argc, const char **argv) {
 		else if (strncmp(line,"show",4)==0) {
 			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
 			if (*c == 'o') show_opts = True;
+		}
+		else if (strncmp(line,"autocomplete",11)==0) {
+			autocomplete = True;
 		}
 		else if (strncmp(line,"background",10)==0) {
 			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colBG,c,7);
@@ -212,6 +214,13 @@ static int init_X() {
 	XDrawLine(dpy,buf,gc,5,2,5,fh);
 	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 	XFlush(dpy);
+	if (autocomplete) {
+		XKeyEvent e;
+		e.display = dpy; e.window = root; e.root = root; e.subwindow = None;
+		e.time = CurrentTime; e.type = KeyPress; e.state = 0;
+		e.keycode = XKeysymToKeycode(dpy,XK_Tab);
+		XPutBackEvent(dpy,(XEvent *) &e); XFlush(dpy);
+	}
 	return 0;
 }
 
@@ -265,7 +274,8 @@ static int main_loop() {
 				}
 			}
 		}
-		else if (key == XK_Tab) {
+		else if (key == XK_Tab ||
+				(compcheck && (key == XK_Down || key == XK_Up))) {
 			if (!compcheck) {
 				precomp = strlen(line);
 				if (complist) {
@@ -321,7 +331,7 @@ static int main_loop() {
 				}
 			}
 			if (compcheck) {
-				if (mod & ShiftMask) {
+				if ( (key==XK_Tab && (mod&ShiftMask)) || key == XK_Up ) {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
 				}
 				else if ( (++compcur) >= compcount ) compcur = 0;
@@ -332,7 +342,8 @@ static int main_loop() {
 			if (!iscntrl(*txt)) strncat(line,txt,len);
 			if (show_opts) XResizeWindow(dpy,win,w,h);
 		}
-		if (key != XK_Tab && key != XK_Shift_L && key != XK_Shift_R)
+		if ( ! ((key==XK_Tab) || (key==XK_Shift_L) || (key== XK_Shift_R) ||
+				(key==XK_Down) || (key==XK_Up) ))
 			compcheck = False;
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
