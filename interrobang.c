@@ -240,14 +240,20 @@ static int init_X() {
 }
 
 static int options(int n, const char **opt, int cur, int x) {
-	int i = n - 1, wx = w, tx;
-	while (wx > x && i >= 0) {
+	int i, j, wx, tx;
+	for (j = n - 1; j; j--) {
+		for (wx = w, i = j; wx > x && i > -1; i--) {
+			wx -= XmbTextEscapement(xfs,opt[i],strlen(opt[i])) +
+					XmbTextEscapement(xfs," ",1);
+		}
+		if (i < cur) break;
+	}
+	for (wx = w, i = j; wx > x && i >= 0; i--) {
 		tx = XmbTextEscapement(xfs,opt[i],strlen(opt[i]));
 		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),
 				fh,opt[i],strlen(opt[i]));
 		tx = XmbTextEscapement(xfs," ",1);
 		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),fh," ",1);
-		i--;
 	}
 }
 
@@ -365,7 +371,7 @@ static int main_loop() {
 		tx = XmbTextEscapement(xfs,line,strlen(line));
 		XDrawLine(dpy,buf,gc,tx+5,2,tx+5,fh);
 		if (show_opts && compcheck)
-			options(compcount,(const char **)complist,compcur,tx + 40);
+			options(compcount,(const char **)complist,compcur,tx + 100);
 		XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 		XFlush(dpy);
 		if (breakcode) break;
