@@ -260,7 +260,6 @@ static int options(int n, const char **opt, int cur, int x) {
 static int main_loop() {
 	XEvent ev; XKeyEvent *e; KeySym key;
 	int breakcode = 0, tx = 0, i, compcount = 0, compcur = 0, len = 0;
-	unsigned int mod;
 	char prefix[MAX_LINE+3], *sp = NULL;
 	char **complist = NULL, txt[32], *c, *comp = NULL;
 	FILE *compgen; Bool compcheck = False; Status stat;
@@ -307,8 +306,8 @@ static int main_loop() {
 				}
 			}
 		}
-		else if (key == XK_Tab ||
-				(compcheck && (key == XK_Down || key == XK_Up))) {
+		else if (key == XK_Tab ||  (compcheck &&
+				(key == XK_ISO_Left_Tab || key == XK_Down || key == XK_Up))) {
 			if (!compcheck) {
 				precomp = strlen(line);
 				if (complist) {
@@ -352,7 +351,7 @@ static int main_loop() {
 				compcur = -1;
 			}
 			if (compcheck) {
-				if ( (key==XK_Tab && (mod&ShiftMask)) || key == XK_Up ) {
+				if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
 				}
 				else if ( (++compcur) >= compcount ) compcur = 0;
@@ -362,8 +361,8 @@ static int main_loop() {
 		else {
 			if (!iscntrl(*txt)) strncat(line,txt,len);
 		}
-		if ( ! ((key==XK_Tab) || (key==XK_Shift_L) || (key== XK_Shift_R) ||
-				(key==XK_Down) || (key==XK_Up) ))
+		if ( ! ((key==XK_Tab) || (key==XK_ISO_Left_Tab) || (key==XK_Shift_L) ||
+				(key== XK_Shift_R) || (key==XK_Down) || (key==XK_Up) ))
 			compcheck = False;
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
