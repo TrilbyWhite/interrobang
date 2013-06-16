@@ -1,4 +1,3 @@
-
 ## | InterobangRC
 ## |
 ## | Lines starting with a # are ignored as comments, but this file is
@@ -14,8 +13,8 @@ foreground	#68B0E0
 background	#000000
 #border		#FFFFFF
 bangchar	!
-show		options
-options		#242424	#48E084	#484848	#64FFAA
+#show		options
+#options		#242424	#48E084	#484848	#64FFAA
 
 # | BANGS & TAB COMPLETION
 # | The first listed bang is the default
