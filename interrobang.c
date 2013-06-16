@@ -85,8 +85,7 @@ static int config(int argc, const char **argv) {
 	}
 	if (!rc) {
 		chdir(getenv("XDG_CONFIG_HOME"));
-		chdir("interrobang");
-		rc = fopen("config","r");
+		if (chdir("interrobang")==0) rc = fopen("config","r");
 	}
 	if (!rc) { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
 	chdir(cwd);
@@ -221,7 +220,13 @@ static int init_X() {
 		CWOverrideRedirect|CWBorderPixel,&wa);
 	buf = XCreatePixmap(dpy,root,w,h,DefaultDepth(dpy,scr));
 	/* input context */
+#ifdef DEBUG
+fprintf(stderr,"pre XOpenIM (dpy=%d)\n",dpy);
+#endif
 	XIM xim = XOpenIM(dpy,NULL,NULL,NULL);
+#ifdef DEBUG
+fprintf(stderr,"post XOpenIM\n");
+#endif
 	xic = XCreateIC(xim,XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
 			XNClientWindow, win, XNFocusWindow, win, NULL);
 	XMapWindow(dpy,win);

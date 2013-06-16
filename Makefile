@@ -7,6 +7,9 @@ all: ${PROG}.c
 	@gcc -o ${PROG} ${PROG}.c ${CFLAGS}
 	@strip ${PROG}
 
+debug: ${PROG}.c
+	@gcc -o ${PROG} ${PROG}.c ${CFLAGS} -DDEBUG
+
 clean:
 	@rm -rf ${PROG}
 
