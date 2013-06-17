@@ -221,10 +221,6 @@ static int init_X() {
 	buf = XCreatePixmap(dpy,root,w,h,DefaultDepth(dpy,scr));
 	/* input context */
 	XIM xim = XOpenIM(dpy,NULL,NULL,NULL);
-	if (!xim) { // 4 lines from: http://permalink.gmane.org/gmane.comp.lib.fltk.bugs/5522
-		XSetLocaleModifiers(" <at> im=local");
-		xim = XOpenIM(dpy, NULL, NULL, NULL);
-	}
 	if (!xim) die("No X input method could be opened\n");
 	xic = XCreateIC(xim,XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
 			XNClientWindow, win, XNFocusWindow, win, NULL);
