@@ -262,9 +262,9 @@ static int options(int n, const char **opt, int cur, int x) {
 
 static int main_loop() {
 	XEvent ev; XKeyEvent *e; KeySym key;
-	int breakcode = 0, tx = 0, i, compcount = 0, compcur = 0, len = 0;
+	int breakcode = 0, tx = 0, i, compcount = 0, compcur = 0, len = 0, pos = 0;
 	char prefix[MAX_LINE+3], *sp = NULL;
-	char **complist = NULL, txt[32], *c, *comp = NULL;
+	char **complist = NULL, txt[32], *c, *comp = NULL, *part;
 	FILE *compgen; Bool compcheck = False; Status stat;
 	while (!XNextEvent(dpy,&ev)) {
 		if (XFilterEvent(&ev,win)) continue;
@@ -276,17 +276,26 @@ static int main_loop() {
 		if (stat == XBufferOverflow) continue;
 		if (e->state & Mod1Mask) continue;
 		if (e->state & ControlMask) {
-			if (key == 'u') line[0] = '\0';
-			if (key == 'c') line[precomp] = '\0';
+			if (key == 'u') line[(pos=0)] = '\0';
+			if (key == 'c') line[(pos=precomp)] = '\0';
 		}
 		else if (key == XK_Return) breakcode = 1;
 		else if (key == XK_Escape) breakcode = -1;
-		else if (key == XK_Delete) line[0] = '\0';
-		else if (key == XK_space) strcat(line," ");
-		else if (key == XK_BackSpace) {
-			for (c = &line[strlen(line)-1];(*c&0xC0)==0x80; c--);
-			*c = '\0';
+		else if (key == XK_Delete && line[pos] != '\0') {
+			part = &line[pos];
+			for (c = &line[(++pos)];(*c&0xC0)==0x80; c++, pos++);
+			strcpy(part,c);
+			pos = part-line;
+			compcheck = False;
 		}
+		else if (key == XK_BackSpace && pos > 0) {
+			part = strdup(&line[pos]);
+			for (c = &line[(--pos)];(*c&0xC0)==0x80; c--, pos--);
+			strcpy(c,part); free(part);
+			compcheck = False;
+		}
+		else if (key == XK_Left && pos > 0) pos--;
+		else if (key == XK_Right && pos < strlen(line)) pos++;
 		else if (key == XK_Insert && (e->state & ShiftMask)) {
 			Window w;
 			int fmt, res;
@@ -308,9 +317,10 @@ static int main_loop() {
 					XFree(s);
 				}
 			}
+			compcheck = False;
 		}
-		else if (key == XK_Tab ||  (compcheck &&
-				(key == XK_ISO_Left_Tab || key == XK_Down || key == XK_Up))) {
+		else if (key == XK_Tab || key == XK_ISO_Left_Tab || 
+				key == XK_Down || key == XK_Up) {
 			if (!compcheck) {
 				precomp = strlen(line);
 				if (complist) {
@@ -362,15 +372,19 @@ static int main_loop() {
 			}
 		}
 		else {
-			if (!iscntrl(*txt)) strncat(line,txt,len);
+			if (!iscntrl(*txt)) {
+				part = strdup(&line[pos]);
+				line[pos] = '\0';
+				strncat(line,txt,len);
+				strcat(line,part); free(part);
+				pos+=len;
+				compcheck = False;
+			}
 		}
-		if ( ! ((key==XK_Tab) || (key==XK_ISO_Left_Tab) || (key==XK_Shift_L) ||
-				(key== XK_Shift_R) || (key==XK_Down) || (key==XK_Up) ))
-			compcheck = False;
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
 		XmbDrawString(dpy,buf,xfs,gc,5,fh,line,strlen(line));
-		tx = XmbTextEscapement(xfs,line,strlen(line));
+		tx = XmbTextEscapement(xfs,line,pos);
 		XDrawLine(dpy,buf,gc,tx+5,2,tx+5,fh);
 		if (show_opts && compcheck)
 			options(compcount,(const char **)complist,compcur,tx + 100);
