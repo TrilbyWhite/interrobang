@@ -241,14 +241,17 @@ static int init_X() {
 
 static int options(int n, const char **opt, int cur, int x) {
 	int i, j, wx, tx;
+	tx = XmbTextEscapement(xfs,">",1);
 	for (j = n - 1; j; j--) {
-		for (wx = w, i = j; wx > x && i > -1; i--) {
+		for (wx = w, i = j; wx > x+tx && i > -1; i--) {
 			wx -= XmbTextEscapement(xfs,opt[i],strlen(opt[i])) +
 					XmbTextEscapement(xfs," ",1);
 		}
 		if (i < cur) break;
 	}
-	for (wx = w, i = j; wx > x && i >= 0; i--) {
+	wx = w;
+	if (j - i < n) XmbDrawImageString(dpy,buf,xfs,ogc,(wx-=tx),fh,">",1);
+	for (i = j; wx > x && i >= 0; i--) {
 		tx = XmbTextEscapement(xfs,opt[i],strlen(opt[i]));
 		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),
 				fh,opt[i],strlen(opt[i]));
