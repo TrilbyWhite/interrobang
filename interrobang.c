@@ -40,7 +40,7 @@
 	"\t-\tOverride ~/.interrobangrc with configuration read from stdin\n\n" \
 	"Hushbang:\n\tProvide any bang (without bangchar) to have the associated\n" \
 	"\tcommmand executed on the input string\n\n" \
-	"See `man interrobang` for more information.\n"
+	"See `man interrobang` for more information. (NOT YET AVAILABLE)\n"
 
 #define MAX_LINE	240
 
