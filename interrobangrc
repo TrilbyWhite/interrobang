@@ -4,6 +4,9 @@
 ## | not processed by a shell interpreter.
 
 
+## | GENERAL OPTIONS
+## |
+
 font		fixed
 #font		-*-terminus-medium-r-normal--14-140-72-72-c-*-*-*
 geometry	top
@@ -13,8 +16,24 @@ foreground	#68B0E0
 background	#000000
 #border		#FFFFFF
 bangchar	!
+
+
+## | SHOW OPTIONS IN THE BAR?
+## | options = colors: fg bg selfg selbg
+## | autocomp:
+## |     -1 = disabled (default)
+## |      0 = show options on startup, good for scripting menus
+## |      N = show options automatically when N or more characters
+## |              have been typed (N >= 1).
+## | Note: with autocomp >= 1, the completion options are only
+## |           displayed, but *not* filled in on the entry line
+## |           when you hit <enter> interrobang will use the currently
+## |           selected option as the command
+
 #show		options
-#options		#242424	#48E084	#484848	#64FFAA
+#options	#242424	#48E084	#484848	#64FFAA
+#autocomp	1
+
 
 # | BANGS & TAB COMPLETION
 # | The first listed bang is the default

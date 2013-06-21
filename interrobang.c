@@ -52,7 +52,7 @@ typedef struct Bang {
 
 static Bang *bangs;
 static int nbangs, scr, fh, x = 0, y = 0, w = 0, h = 0, hushbang = -1;
-static int precomp = 0;
+static int precomp = 0, autocomplete = -1;
 static Display *dpy;
 static Window root, win;
 static Pixmap buf;
@@ -64,7 +64,7 @@ static char font[MAX_LINE] =
 		"-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
 static char defaultcomp[MAX_LINE] = "";
-static Bool show_opts = False, autocomplete = False;
+static Bool show_opts = False, autofill = True;
 static char opt_col[4][8] = {"#242424","#48E084","#484848","#64FFAA"};
 
 static int config(int argc, const char **argv) {
@@ -105,7 +105,8 @@ static int config(int argc, const char **argv) {
 			if (*c == 'o') show_opts = True;
 		}
 		else if (strncmp(line,"autocomplete",11)==0) {
-			autocomplete = True;
+			for (c = line + 12; *c == ' ' || *c == '\t'; c++);
+			autocomplete = atoi(c);
 		}
 		else if (strncmp(line,"options",7)==0) {
 			sscanf(line,"options %7s %7s %7s %7s",
@@ -229,7 +230,7 @@ static int init_X() {
 	XDrawLine(dpy,buf,gc,5,2,5,fh);
 	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 	XFlush(dpy);
-	if (autocomplete) {
+	if (autocomplete == 0) {
 		XKeyEvent e;
 		e.display = dpy; e.window = root; e.root = root; e.subwindow = None;
 		e.time = CurrentTime; e.type = KeyPress; e.state = 0;
@@ -321,8 +322,19 @@ static int main_loop() {
 			}
 			compcheck = False;
 		}
-		else if (key == XK_Tab || key == XK_ISO_Left_Tab || 
-				key == XK_Down || key == XK_Up) {
+		else {
+			if (!iscntrl(*txt)) {
+				part = strdup(&line[pos]);
+				line[pos] = '\0';
+				strncat(line,txt,len);
+				strcat(line,part); free(part);
+				pos+=len;
+				compcheck = False;
+			}
+		}
+		if ( key == XK_Tab || key == XK_ISO_Left_Tab || 
+				key == XK_Down || key == XK_Up ||
+				(breakcode == 0 && autocomplete > 0 && pos >= autocomplete) ) {
 			if (!compcheck) {
 				precomp = strlen(line);
 				if (complist) {
@@ -370,17 +382,10 @@ static int main_loop() {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
 				}
 				else if ( (++compcur) >= compcount ) compcur = 0;
-				strcpy(line,complist[compcur]);
-			}
-		}
-		else {
-			if (!iscntrl(*txt)) {
-				part = strdup(&line[pos]);
-				line[pos] = '\0';
-				strncat(line,txt,len);
-				strcat(line,part); free(part);
-				pos+=len;
-				compcheck = False;
+				if (autocomplete < 1) {
+					strcpy(line,complist[compcur]);
+					pos = strlen(line);
+				}
 			}
 		}
 		/* draw */
@@ -394,6 +399,7 @@ static int main_loop() {
 		XFlush(dpy);
 		if (breakcode) break;
 	}
+	if (autocomplete > 0 && compcheck) strcpy(line,complist[compcur]);
 	if (complist) {
 		for (i = 0; i < compcount; i++) free(complist[i]);
 		free(complist);
