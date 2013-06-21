@@ -296,6 +296,8 @@ static int main_loop() {
 		}
 		else if (key == XK_Left && pos > 0) pos--;
 		else if (key == XK_Right && pos < strlen(line)) pos++;
+		else if (key == XK_Home) pos = 0;
+		else if (key == XK_End) pos = strlen(line);
 		else if (key == XK_Insert && (e->state & ShiftMask)) {
 			Window w;
 			int fmt, res;
