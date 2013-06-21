@@ -388,6 +388,16 @@ static int main_loop() {
 	return (breakcode == 1 ? 1 : 0);
 }
 
+static int clean_up() {
+	XFreeFontSet(dpy,xfs);
+	XFreeGC(dpy,bgc); XFreeGC(dpy,gc);
+	XDestroyIC(xic);
+	XFreePixmap(dpy,buf);
+	XDestroyWindow(dpy,win);
+	XCloseDisplay(dpy);
+	return 0;
+}
+
 static int process_command() {
 	int i, x = 0; char *c, *b = NULL;
 	strcpy(cmd,"");
@@ -410,26 +420,19 @@ static int process_command() {
 		if (hushbang > -1) sprintf(cmd,bangs[hushbang].command,line);
 		else strcpy(cmd,line);
 	} 
-	strcat(cmd," &");
-	if (strlen(cmd) > 2) return system(cmd);
-}
-
-static int clean_up() {
-	XFreeFontSet(dpy,xfs);
-	XFreeGC(dpy,bgc); XFreeGC(dpy,gc);
-	XDestroyIC(xic);
-	XFreePixmap(dpy,buf);
-	XDestroyWindow(dpy,win);
-	XCloseDisplay(dpy);
-	return 0;
+	clean_up();
+	if (strlen(cmd) > 2) {
+		const char *argv[4]; argv[0] = "/bin/sh"; argv[1] = "-c";
+		argv[3] = NULL; argv[2] = cmd;
+		execv(argv[0],argv);
+	}
 }
 
 int main(int argc, const char **argv) {	
-	int ret = 0;
 	config(argc,argv);
 	init_X();
-	if (main_loop()) ret = process_command();
-	clean_up();
-	return ret;
+	if (main_loop()) process_command();
+	else clean_up();
+	return 0;
 }
 
