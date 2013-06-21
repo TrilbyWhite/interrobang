@@ -408,7 +408,7 @@ static int process_command() {
 		else strcpy(cmd,line);
 	} 
 	strcat(cmd," &");
-	if (strlen(cmd) > 2) system(cmd);
+	if (strlen(cmd) > 2) return system(cmd);
 }
 
 static int clean_up() {
@@ -422,10 +422,11 @@ static int clean_up() {
 }
 
 int main(int argc, const char **argv) {	
+	int ret = 0;
 	config(argc,argv);
 	init_X();
-	if (main_loop()) process_command();
+	if (main_loop()) ret = process_command();
 	clean_up();
-	return 0;
+	return ret;
 }
 
