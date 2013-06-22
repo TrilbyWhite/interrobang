@@ -16,6 +16,7 @@ foreground	#68B0E0
 background	#000000
 #border		#FFFFFF
 bangchar	!
+#run_hook	%s
 
 
 ## | SHOW OPTIONS IN THE BAR?

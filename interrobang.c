@@ -63,7 +63,7 @@ static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8]
 static char font[MAX_LINE] =
 		"-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
-static char defaultcomp[MAX_LINE] = "";
+static char defaultcomp[MAX_LINE] = "", *run_hook = NULL;
 static Bool show_opts = False;
 static char opt_col[4][8] = {"#242424","#48E084","#484848","#64FFAA"};
 
@@ -103,6 +103,10 @@ static int config(int argc, const char **argv) {
 		else if (strncmp(line,"show",4)==0) {
 			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
 			if (*c == 'o') show_opts = True;
+		}
+		else if (strncmp(line,"run_hook",8)==0) {
+			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
+			run_hook = strdup(c);
 		}
 		else if (strncmp(line,"autocomp",8)==0) {
 			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
@@ -444,6 +448,11 @@ static int process_command() {
 	} 
 	clean_up();
 	if (strlen(cmd) > 2) {
+		if (run_hook) {
+			char *tmp = strdup(cmd);
+			snprintf(cmd,MAX_LINE*2,run_hook,tmp);
+			free(tmp); free(run_hook);
+		}
 		const char *argv[4]; argv[0] = "/bin/sh"; argv[1] = "-c";
 		argv[3] = NULL; argv[2] = cmd;
 		execv(argv[0],argv);
