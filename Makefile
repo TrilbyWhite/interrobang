@@ -17,6 +17,7 @@ debug: ${PROG}.c
 
 clean:
 	@rm -rf ${PROG}
+	@rm -rf percontation
 
 install: all
 	@install -Dm755 ${PROG} ${DESTDIR}${PREFIX}/bin/${PROG}

@@ -23,7 +23,15 @@ static int get_name(const char *path,int opt) {
 	DIR *dir;
 	struct dirent *de;
 	struct stat info;
-	if ( !(dir = opendir(path)) ) return 1;
+	if (path[0] == '\0') {
+		dir = opendir("/");
+		chdir("/");
+	}
+	else {
+		dir = opendir(path);
+		chdir(path);
+	}
+	if (!dir) return 1;
 	while ( (de=readdir(dir)) ) {
 		if (de->d_name[0] == '.') continue;
 		if (strncmp(de->d_name,str,strlen(str))) continue;
@@ -38,6 +46,7 @@ static int get_name(const char *path,int opt) {
 
 int main(int argc, const char **argv) {
 	char *path;
+	const char *pwd = getenv("PWD");
 	if ( !((argc==3) && (path=getenv("PATH"))) ) return 1;
 	pre = argv[1];
 	str = argv[2];
@@ -53,13 +62,13 @@ int main(int argc, const char **argv) {
 		*c = '\0';
 		str = strrchr(argv[2],'/');
 		str++;
-		if (path[0] == '\0') get_name("/",OPT_PATH);
+		if (path[0] == '\0') get_name("",OPT_PATH);
 		else get_name(path,OPT_PATH);
 		free(path);
 	}
 	else {
-		path = getenv("PWD");
-		get_name(path,OPT_NORM);
+		get_name(pwd,OPT_NORM);
 	}
+	chdir(pwd);
 	return 0;
 }
