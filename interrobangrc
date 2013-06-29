@@ -58,6 +58,10 @@ TAB()		compgen -P "%s" -cf %s
 # |     adds spaces after commands and slashes after urls and escapes
 # |     parentheses and square brackets
 #TAB()		compgen -P "%s" -fc %s | sort -u | while read s; do s=${s/\(/\\(}; s=${s/\)/\\)}; s=${s/\[/\\[}; s=${s/\]/\\]}; [[ -d ${s##* } ]] && echo "$s/" || echo "$s "; done
+# | Experimental replacement for bash completion
+#TAB()	percontation "%s" %s
+
+
 #TAB(term)	completion for terminal commands
 #TAB(pdf)	compgen -P "%s" -f ~/doc/pdfs/%s
 TAB(calc)	S1="%s%s"; S2="${S1/\!calc/}"; echo "!calc $(echo $S2 | bc -l)"

@@ -3,7 +3,12 @@ PROG	=	interrobang
 PREFIX	?=	/usr
 CFLAGS	+=	-lX11
 
-all: ${PROG}.c
+all: ${PROG} percontation
+
+percontation: percontation.c
+	@gcc -o percontation percontation.c
+
+${PROG}: ${PROG}.c
 	@gcc -o ${PROG} ${PROG}.c ${CFLAGS}
 	@strip ${PROG}
 
@@ -15,4 +20,5 @@ clean:
 
 install: all
 	@install -Dm755 ${PROG} ${DESTDIR}${PREFIX}/bin/${PROG}
+	@install -Dm755 percontation ${DESTDIR}${PREFIX}/bin/percontation
 
