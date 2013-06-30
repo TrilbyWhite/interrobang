@@ -16,7 +16,16 @@ foreground	#68B0E0
 background	#000000
 #border		#FFFFFF
 bangchar	!
+
+## | RUN HOOK
+## | The selected command is executed in the following form
+## | where %s is replaced by the command.  The default behavior
+## | is to simply execute the command.  You may modify this
+## | to check for errors or to save commands to a history file
+##DEFAULT
 #run_hook	%s
+##ERROR CHECK
+#run_hook	run_hook %s || (notify-send "Error: command not found"; interrobang)
 
 
 ## | SHOW OPTIONS IN THE BAR?
@@ -59,7 +68,7 @@ TAB()		compgen -P "%s" -cf %s
 # |     parentheses and square brackets
 #TAB()		compgen -P "%s" -fc %s | sort -u | while read s; do s=${s/\(/\\(}; s=${s/\)/\\)}; s=${s/\[/\\[}; s=${s/\]/\\]}; [[ -d ${s##* } ]] && echo "$s/" || echo "$s "; done
 # | Experimental replacement for bash completion
-#TAB()	percontation "%s" %s
+#TAB()	percontation "%s" %s | sort -u
 
 
 #TAB(term)	completion for terminal commands
