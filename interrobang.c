@@ -336,7 +336,11 @@ static int main_loop() {
 				compcheck = False;
 			}
 		}
-		if ( key == XK_Tab || key == XK_ISO_Left_Tab || 
+		if ( key == XK_Tab && autocomp > 0 ) {
+			strcpy(line,complist[compcur]);
+			pos = strlen(line);
+		}
+		else if ( key == XK_Tab || key == XK_ISO_Left_Tab || 
 				key == XK_Down || key == XK_Up ||
 				(breakcode == 0 && autocomp > 0 && pos >= autocomp) ) {
 			if (!compcheck) {
