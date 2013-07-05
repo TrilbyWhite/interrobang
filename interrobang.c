@@ -244,22 +244,25 @@ static int init_X() {
 	return 0;
 }
 
-static int options(int n, const char **opt, int cur, int x) {
+static int options(int n,const char **opt, int cur, int x) {
 	int i, j, wx, tx;
 	tx = XmbTextEscapement(xfs,">",1);
+	const char *last;
 	for (j = n - 1; j; j--) {
 		for (wx = w, i = j; wx > x+tx && i > -1; i--) {
-			wx -= XmbTextEscapement(xfs,opt[i],strlen(opt[i])) +
-					XmbTextEscapement(xfs," ",1);
+			last = strrchr(opt[i],' ');
+			if (!last || *(++last) == '\0') last = opt[i];
+			wx -= XmbTextEscapement(xfs,last,strlen(last)+XmbTextEscapement(xfs," ",1));
 		}
 		if (i < cur) break;
 	}
 	wx = w;
 	if (j - i < n) XmbDrawImageString(dpy,buf,xfs,ogc,(wx-=tx),fh,">",1);
 	for (i = j; wx > x && i >= 0; i--) {
-		tx = XmbTextEscapement(xfs,opt[i],strlen(opt[i]));
-		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),
-				fh,opt[i],strlen(opt[i]));
+		last = strrchr(opt[i],' ');
+		if (!last || *(++last) == '\0') last = opt[i];
+		tx = XmbTextEscapement(xfs,last,strlen(last));
+		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),fh,last,strlen(last));
 		tx = XmbTextEscapement(xfs," ",1);
 		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),fh," ",1);
 	}
