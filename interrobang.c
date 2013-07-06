@@ -29,7 +29,7 @@
 #include <X11/Xatom.h>
 
 #define VERSION_STRING \
-	"INTERROBANG, version 0.1\n" \
+	"INTERROBANG, version 0.2\n" \
 	"Copyright (C) 2013 Jesse McClure\n" \
 	"License GPLv3 <http://gnu.org/licenses/gpl.html>\n"
 
@@ -194,7 +194,7 @@ static int init_X() {
 	val.foreground = color.pixel;
 	osgc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
 	fh = fss[0]->ascent + 1;
-	if (!h) h = fh + fss[0]->descent + 2;
+	if (!h) h = fh + fss[0]->descent + 1;
 	if (y == -1) y = DisplayHeight(dpy,scr) - h;
 	/* grab keys */
 	for (i = 0; i < 1000; i++) {
