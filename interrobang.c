@@ -1,4 +1,4 @@
-/**************************************************************************\
+/************************************************************************\
 * INTERROBANG - a tiny launcher menu packing a big bang (syntax)
 *
 * Author: Jesse McClure, copyright 2013
@@ -17,7 +17,7 @@
 *    You should have received a copy of the GNU General Public License
 *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-\**************************************************************************/
+\************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,11 +35,15 @@
 
 #define HELP_STRING \
 	"\nUsage: %s [option] [hushbang]\n\n" \
-	"Options:\n\t-h\tShow this help message and exit.\n" \
-	"\t-v\tShow version information and exit.\n" \
-	"\t-\tOverride ~/.interrobangrc with configuration read from stdin\n\n" \
-	"Hushbang:\n\tProvide any bang (without bangchar) to have the associated\n" \
-	"\tcommmand executed on the input string\n\n" \
+	"Options:\n" \
+	"   -h         Show this help message and exit.\n" \
+	"   -v         Show version information and exit.\n" \
+	"   -o <opt>   Override a single setting from rc file\n" \
+	"   -          Override ~/.interrobangrc with configuration " \
+			"read from stdin\n\n" \
+	"Hushbang:\n" \
+	"   Provide any bang (without bangchar) to have the\n" \
+	"   associated commmand executed on the input string\n\n" \
 	"See `man interrobang` for more information. (NOT YET AVAILABLE)\n"
 
 #define MAX_LINE	240
@@ -50,23 +54,26 @@ typedef struct Bang {
 	char *comp;
 } Bang;
 
-static Bang *bangs;
-static int nbangs, scr, fh, x = 0, y = 0, w = 0, h = 0, hushbang = -1;
-static int precomp = 0, autocomp = -1, bpx = 0;
 static Display *dpy;
+static int nbangs,scr,fh,x=0,y=0,w=0,h=0,hush=-1,autocomp=-1,bpx=0;
 static Window root, win;
 static Pixmap buf;
 static GC gc, bgc, ogc, osgc;
 static XFontSet xfs;
 static XIC xic;
-static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "#000000";
-static char font[MAX_LINE] =
-		"-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
-static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
-static char defaultcomp[MAX_LINE] = "", *run_hook = NULL;
-static const char *hushbangstr = NULL;
+static Bang *bangs;
 static Bool show_opts = False, last_word = False;
-static char opt_col[4][8] = {"#242424","#48E084","#484848","#64FFAA"};
+static const char *hushstr = NULL;
+static char bangchar = '!', font[MAX_LINE] = "fixed",
+		line[MAX_LINE+4], bang[MAX_LINE], cmd[2*MAX_LINE],
+		completion[MAX_LINE], defaultcomp[MAX_LINE] = "",
+		*run_hook = NULL;
+static char col[7][8] = {
+	/* BG		FG			BRD */
+	"#121212", "#EEEEEE", "#000000",
+	"#242424", "#48E084", 
+	"#484848","#64FFAA"
+};
 
 static int config_string(const char *str) {
 	int i; char cmd[12], opt[32], val[MAX_LINE];
@@ -78,10 +85,10 @@ static int config_string(const char *str) {
 			else sscanf(val,"%dx%d+%d+%d",&w,&h,&x,&y);
 		}
 		else if (strncmp(opt,"col",3)==0)
-			sscanf(val,"%s %s %s %s %s %s",colFG,colBG,
-					opt_col[0],opt_col[1],opt_col[2],opt_col[3]);
+			sscanf(val,"%s %s %s %s %s %s",col[0],col[1],
+					opt[3],opt[4],opt[5],opt[6]);
 		else if (strncmp(opt,"bord",4)==0)
-			sscanf(val,"%dpx %s",&bpx,colBD);
+			sscanf(val,"%dpx %s",&bpx,col[2]);
 		else if (strncmp(opt,"bang",4)==0)
 			bangchar = val[0];
 		else if (strncmp(opt,"run",3)==0)
@@ -92,10 +99,11 @@ static int config_string(const char *str) {
 			show_opts = (val[0]=='T'||val[0]=='t');
 		else if (strncmp(opt,"last",4)==0)
 			last_word = (val[0]=='T'||val[0]=='t');
+		else printf("interrobang: unknown option \"%s\"\n",opt);
 	}
 	else if (strncmp(cmd,"bang",4)==0) {
-		if (hushbangstr && strncmp(opt,hushbangstr,strlen(opt))==0)
-			hushbang = nbangs;
+		if (hushstr && strncmp(opt,hushstr,strlen(opt))==0)
+			hush = nbangs;
 		bangs = (Bang *) realloc(bangs,(nbangs + 1) * sizeof(Bang));
 		bangs[nbangs].bang = strdup(opt);
 		bangs[nbangs++].command = strdup(val);
@@ -128,7 +136,7 @@ static int config(int argc, const char **argv) {
 			else if (flag == 'o' && argc > i + 1) i++;
 			else fprintf(stderr,"unrecognized parameter \"%s\"\n",argv[i]);
 		}
-		else hushbangstr = argv[i];
+		else hushstr = argv[i];
 	}
 	/* open and read rc file */
 	if (!rc) {
@@ -177,20 +185,20 @@ static int init_X() {
 	XFontsOfFontSet(xfs,&fss,&names);
 	if (missing) XFreeStringList(missing);
 	/* graphic contexts */
-	XAllocNamedColor(dpy,cmap,colBG,&color,&color);
+	XAllocNamedColor(dpy,cmap,col[1],&color,&color);
 	val.foreground = color.pixel;
 	bgc = XCreateGC(dpy,root,GCForeground,&val);
-	XAllocNamedColor(dpy,cmap,colFG,&color,&color);
+	XAllocNamedColor(dpy,cmap,col[0],&color,&color);
 	val.foreground = color.pixel;
 	gc = XCreateGC(dpy,root,GCForeground,&val);
-	XAllocNamedColor(dpy,cmap,opt_col[0],&color,&color);
+	XAllocNamedColor(dpy,cmap,col[3],&color,&color);
 	val.background = color.pixel;
-	XAllocNamedColor(dpy,cmap,opt_col[1],&color,&color);
+	XAllocNamedColor(dpy,cmap,col[4],&color,&color);
 	val.foreground = color.pixel;
 	ogc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
-	XAllocNamedColor(dpy,cmap,opt_col[2],&color,&color);
+	XAllocNamedColor(dpy,cmap,col[5],&color,&color);
 	val.background = color.pixel;
-	XAllocNamedColor(dpy,cmap,opt_col[3],&color,&color);
+	XAllocNamedColor(dpy,cmap,col[6],&color,&color);
 	val.foreground = color.pixel;
 	osgc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
 	fh = fss[0]->ascent + 1;
@@ -206,7 +214,7 @@ static int init_X() {
 	/* create window and buffer */
 	XSetWindowAttributes wa;
 	wa.override_redirect = True;
-	wa.border_pixel = (XAllocNamedColor(dpy,cmap,colBD,&color,&color) ?
+	wa.border_pixel = (XAllocNamedColor(dpy,cmap,col[2],&color,&color) ?
 		color.pixel : 0);
 	win = XCreateWindow(dpy,root,x,y,w,h,bpx,DefaultDepth(dpy,scr),
 			CopyFromParent,DefaultVisual(dpy,scr),
@@ -262,7 +270,8 @@ static int options(int n,const char **opt, int cur, int x) {
 
 static int main_loop() {
 	XEvent ev; XKeyEvent *e; KeySym key;
-	int breakcode = 0, tx = 0, i, compcount = 0, compcur = 0, len = 0, pos = 0;
+	int breakcode=0, tx=0, i, compcount=0, compcur=0, len=0, pos=0;
+	int precomp = 0;
 	char prefix[MAX_LINE+3], *sp = NULL;
 	char **complist = NULL, txt[32], *c, *comp = NULL, *part;
 	FILE *compgen; Bool compcheck = False; Status stat;
@@ -356,8 +365,8 @@ static int main_loop() {
 					prefix[0] = '\0';
 				}
 				comp = NULL;
-				if (hushbang > -1) {
-					comp = bangs[hushbang].comp;
+				if (hush > -1) {
+					comp = bangs[hush].comp;
 				}
 				else if (line[0] == bangchar && line[1] != '\0') {
 					for (i = 0; i < nbangs; i++)
@@ -442,7 +451,7 @@ static int process_command() {
 		else if (b)	sprintf(cmd,b, line + 1);
 	}
 	else {
-		if (hushbang > -1) sprintf(cmd,bangs[hushbang].command,line);
+		if (hush > -1) sprintf(cmd,bangs[hush].command,line);
 		else strcpy(cmd,line);
 	} 
 	clean_up();

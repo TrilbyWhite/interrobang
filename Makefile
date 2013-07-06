@@ -1,25 +1,24 @@
 
 PROG	=	interrobang
+ALTER	=	percontation
 PREFIX	?=	/usr
-CFLAGS	+=	-lX11
+LDFLAGS	+=	-lX11
 
-all: ${PROG} percontation
+all: ${PROG} ${ALTER}
 
-percontation: percontation.c
-	@gcc -o percontation percontation.c
+${ALTER}: ${ALTER}.c
+	@gcc -o ${ALTER} ${ALTER}.c ${CFLAGS}
 
 ${PROG}: ${PROG}.c
-	@gcc -o ${PROG} ${PROG}.c ${CFLAGS}
-	@strip ${PROG}
+	@gcc -o ${PROG} ${PROG}.c ${CFLAGS} ${LDFLAGS}
 
 debug: ${PROG}.c
-	@gcc -o ${PROG} ${PROG}.c ${CFLAGS} -DDEBUG
+	@gcc -o -g ${PROG} ${PROG}.c ${CFLAGS} -DDEBUG
 
 clean:
-	@rm -rf ${PROG}
-	@rm -rf percontation
+	@rm -rf ${PROG} ${ALTER}
 
 install: all
 	@install -Dm755 ${PROG} ${DESTDIR}${PREFIX}/bin/${PROG}
-	@install -Dm755 percontation ${DESTDIR}${PREFIX}/bin/percontation
+	@install -Dm755 ${ALTER} ${DESTDIR}${PREFIX}/bin/${ALTER}
 
