@@ -52,24 +52,70 @@ typedef struct Bang {
 
 static Bang *bangs;
 static int nbangs, scr, fh, x = 0, y = 0, w = 0, h = 0, hushbang = -1;
-static int precomp = 0, autocomp = -1;
+static int precomp = 0, autocomp = -1, bpx = 0;
 static Display *dpy;
 static Window root, win;
 static Pixmap buf;
 static GC gc, bgc, ogc, osgc;
 static XFontSet xfs;
 static XIC xic;
-static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "";
+static char bangchar = '!', colBG[8] = "#121212", colFG[8] = "#EEEEEE", colBD[8] = "#000000";
 static char font[MAX_LINE] =
 		"-misc-fixed-medium-r-normal--13-120-75-75-c-70-*-*";
 static char line[MAX_LINE+4],bang[MAX_LINE],cmd[2*MAX_LINE], completion[MAX_LINE];
 static char defaultcomp[MAX_LINE] = "", *run_hook = NULL;
-static Bool show_opts = False;
+static const char *hushbangstr = NULL;
+static Bool show_opts = False, last_word = False;
 static char opt_col[4][8] = {"#242424","#48E084","#484848","#64FFAA"};
+
+static int config_string(const char *str) {
+	int i; char cmd[12], opt[32], val[MAX_LINE];
+	sscanf(str,"%s %s = %[^\n]",cmd,opt,val);
+	if (strncmp(cmd,"set",3)==0) {
+		if (strncmp(opt,"font",4)==0) strncpy(font,val,MAX_LINE-1);
+		else if (strncmp(opt,"geom",4)==0) {
+			if (strncmp(val,"bot",3)==0) y = -1;
+			else sscanf(val,"%dx%d+%d+%d",&w,&h,&x,&y);
+		}
+		else if (strncmp(opt,"col",3)==0)
+			sscanf(val,"%s %s %s %s %s %s",colFG,colBG,
+					opt_col[0],opt_col[1],opt_col[2],opt_col[3]);
+		else if (strncmp(opt,"bord",4)==0)
+			sscanf(val,"%dpx %s",&bpx,colBD);
+		else if (strncmp(opt,"bang",4)==0)
+			bangchar = val[0];
+		else if (strncmp(opt,"run",3)==0)
+			run_hook = strdup(val);
+		else if (strncmp(opt,"auto",4)==0)
+			autocomp = atoi(val);
+		else if (strncmp(opt,"list",4)==0)
+			show_opts = (val[0]=='T'||val[0]=='t');
+		else if (strncmp(opt,"last",4)==0)
+			last_word = (val[0]=='T'||val[0]=='t');
+	}
+	else if (strncmp(cmd,"bang",4)==0) {
+		if (hushbangstr && strncmp(opt,hushbangstr,strlen(opt))==0)
+			hushbang = nbangs;
+		bangs = (Bang *) realloc(bangs,(nbangs + 1) * sizeof(Bang));
+		bangs[nbangs].bang = strdup(opt);
+		bangs[nbangs++].command = strdup(val);
+	}
+	else if (strncmp(cmd,"tab",3)==0) {
+		if (strncmp(opt,"default",7)==0)
+			strncpy(defaultcomp,val,MAX_LINE-1);
+		else for (i = 0; i < nbangs; i++)
+			if (strncmp(bangs[i].bang,opt,strlen(opt))==0)
+				bangs[i].comp = strdup(val);
+	}
+	else {
+		printf("interrobang: unknown config command\"%s\"\n",cmd);
+	}
+}
 
 static int config(int argc, const char **argv) {
 	FILE *rc=NULL; char *c; int i;
-	const char *hushbangstr = NULL, *cwd = getenv("PWD");
+	const char *cwd = getenv("PWD");
+	/* read command line, ignoring "-opt" settings */
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			char flag = (argv[i][1] == '-' ? argv[i][2] : argv[i][1]);
@@ -79,10 +125,12 @@ static int config(int argc, const char **argv) {
 				printf(VERSION_STRING HELP_STRING,argv[0]);
 				exit(0);
 			}
+			else if (flag == 'o' && argc > i + 1) i++;
 			else fprintf(stderr,"unrecognized parameter \"%s\"\n",argv[i]);
 		}
 		else hushbangstr = argv[i];
 	}
+	/* open and read rc file */
 	if (!rc) {
 		chdir(getenv("XDG_CONFIG_HOME"));
 		if (chdir("interrobang")==0) rc = fopen("config","r");
@@ -92,72 +140,12 @@ static int config(int argc, const char **argv) {
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
 		if (line[0] == '#' || line[0] == '\n') continue;
-		else if (line[0] == bangchar && line[1] != '\0') {
-			sscanf(line+1,"%s %[^\n]",bang,cmd);
-			if (hushbangstr && strncmp(bang,hushbangstr,strlen(bang))==0)
-				hushbang = nbangs;
-			bangs = (Bang *) realloc(bangs,(nbangs + 1) * sizeof(Bang));
-			bangs[nbangs].bang = strdup(bang);
-			bangs[nbangs++].command = strdup(cmd);
-		}
-		else if (strncmp(line,"show",4)==0) {
-			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
-			if (*c == 'o') show_opts = True;
-		}
-		else if (strncmp(line,"run_hook",8)==0) {
-			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
-			run_hook = strdup(c);
-		}
-		else if (strncmp(line,"autocomp",8)==0) {
-			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
-			autocomp = atoi(c);
-		}
-		else if (strncmp(line,"options",7)==0) {
-			sscanf(line,"options %7s %7s %7s %7s",
-					opt_col[0],opt_col[1],opt_col[2],opt_col[3]);
-		}
-		else if (strncmp(line,"background",10)==0) {
-			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colBG,c,7);
-		}
-		else if (strncmp(line,"foreground",10)==0) {
-			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colFG,c,7);
-		}
-		else if (strncmp(line,"border",6)==0) {
-			if ( (c=strchr(line,'#')) && strlen(c) > 6) strncpy(colBD,c,7);
-		}
-		else if (strncmp(line,"font",4)==0) {
-			for (c = line + 4; *c == ' ' || *c == '\t'; c++);
-			if (strlen(c) > 4) strncpy(font,c,strlen(c)+1);
-		}
-		else if (strncmp(line,"bangchar",8)==0) {
-			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
-			if (*c != '\n' && *c != '\0') bangchar = *c;
-		}
-		else if (strncmp(line,"TAB(",4)==0) {
-			if (line[4] == ')') {
-				for (c = line + 5; *c == ' ' || *c == '\t'; c++);
-				if (strlen(c) > 4) strncpy(defaultcomp,c,strlen(c)-1);
-			}
-			else {
-				sscanf(line,"TAB(%[^)])%*[ \t]%[^\n]",bang,cmd);
-				for (i = 0; i < nbangs; i++)
-					if (strncmp(bangs[i].bang,bang,strlen(bang))==0)
-						bangs[i].comp = strdup(cmd);
-			}
-		}
-		else if (strncmp(line,"geometry",8)==0) {
-			for (c = line + 8; *c == ' ' || *c == '\t'; c++);
-			if (*c != '\n' && *c != '\0') {
-				if (*c == 'b') y = -1;
-				else sscanf(c,"%dx%d+%d+%d",&w,&h,&x,&y);
-			}
-		}
-		else {
-			line[strlen(line)-1] = '\0';
-			fprintf(stderr,"unrecognized configuration entry \"%s\"\n",line);
-		}
+		config_string(line);
 	}
 	if (rc != stdin) fclose(rc);
+	/* check command line for option overrides */
+	for (i = 1; i < argc - 1; i++)
+		if (strncmp(argv[i],"-opt",4)==0) config_string(argv[i+1]);
 	strcpy(line,"");
 	return 0;
 }
@@ -178,7 +166,7 @@ static int init_X() {
 	if (!(dpy=XOpenDisplay(0x0))) die("opening display\n");
 	scr = DefaultScreen(dpy);
 	root = RootWindow(dpy,scr);
-	w = (w ? w : DisplayWidth(dpy,scr) - (strlen(colBD)?2:0));
+	w = (w ? w : DisplayWidth(dpy,scr) - bpx*2);
 	Colormap cmap = DefaultColormap(dpy,scr);
 	XColor color; XGCValues val;
 	/* fonts */
@@ -220,9 +208,9 @@ static int init_X() {
 	wa.override_redirect = True;
 	wa.border_pixel = (XAllocNamedColor(dpy,cmap,colBD,&color,&color) ?
 		color.pixel : 0);
-	win = XCreateWindow(dpy,root,x,y,w,h,(strlen(colBD)?1:0),
-		DefaultDepth(dpy,scr),CopyFromParent,DefaultVisual(dpy,scr),
-		CWOverrideRedirect|CWBorderPixel,&wa);
+	win = XCreateWindow(dpy,root,x,y,w,h,bpx,DefaultDepth(dpy,scr),
+			CopyFromParent,DefaultVisual(dpy,scr),
+			CWOverrideRedirect|CWBorderPixel,&wa);
 	buf = XCreatePixmap(dpy,root,w,h,DefaultDepth(dpy,scr));
 	/* input context */
 	XIM xim = XOpenIM(dpy,NULL,NULL,NULL);
@@ -247,24 +235,28 @@ static int init_X() {
 static int options(int n,const char **opt, int cur, int x) {
 	int i, j, wx, tx;
 	tx = XmbTextEscapement(xfs,">",1);
-	const char *last;
+	const char *lw;
 	for (j = n - 1; j; j--) {
 		for (wx = w, i = j; wx > x+tx && i > -1; i--) {
-			last = strrchr(opt[i],' ');
-			if (!last || *(++last) == '\0') last = opt[i];
-			wx -= XmbTextEscapement(xfs,last,strlen(last)+XmbTextEscapement(xfs," ",1));
+			lw = strrchr(opt[i],' ');
+			if (!lw || *(++lw) == '\0' || !last_word) lw = opt[i];
+			wx -= XmbTextEscapement(xfs,lw,strlen(lw) +
+					XmbTextEscapement(xfs," ",1));
 		}
 		if (i < cur) break;
 	}
 	wx = w;
-	if (j - i < n) XmbDrawImageString(dpy,buf,xfs,ogc,(wx-=tx),fh,">",1);
+	if (n > 1 && j - i < n)
+		XmbDrawImageString(dpy,buf,xfs,ogc,(wx-=tx),fh,">",1);
 	for (i = j; wx > x && i >= 0; i--) {
-		last = strrchr(opt[i],' ');
-		if (!last || *(++last) == '\0') last = opt[i];
-		tx = XmbTextEscapement(xfs,last,strlen(last));
-		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),fh,last,strlen(last));
+		lw = strrchr(opt[i],' ');
+		if (!lw || *(++lw) == '\0' || !last_word) lw = opt[i];
+		tx = XmbTextEscapement(xfs,lw,strlen(lw));
+		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),fh,
+				lw,strlen(lw));
 		tx = XmbTextEscapement(xfs," ",1);
-		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),fh," ",1);
+		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),
+				fh," ",1);
 	}
 }
 
