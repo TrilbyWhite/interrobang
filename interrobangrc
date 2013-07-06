@@ -5,10 +5,11 @@
 
 
 set font      = fixed
+#set font      = -*-terminus-bold-r-normal--*-160-*-*-c-*-*-*
 set geometry  = top
 #set geometry  = 800x17+240+320
 set colors	  = #68B0E0 #000000 #242424 #48E084 #484848 #64FFAA
-set border    = 0px #FFFFFF
+set border    = 0px #BBE0EE
 set bangchar  = !
 set run_hook  = %s
 #set run_hook  = %s || (notify-send "Error: command not found";interrobang)
@@ -23,11 +24,11 @@ bang man      = urxvtc -e man %s
 bang ddg      = dwb https://duckduckgo.com/?q=%s
 bang calc     = echo "interrobang ignored \"%s\""
 bang ?        = echo "interrobang ignored \"%s\""
+bang logout   = case "%s" in shutdown) sudo systemctl poweroff ;; sleep) sudo systemctl suspend ;; reboot) sudo systemctl reboot ;; logout) killall xinit ;; cancel) exit ;; esac
 
-#tab default   = compgen -P "%s" -cf %s
 tab default   = percontation "%s" %s | sort -u
+#tab default   = compgen -P "%s" -cf %s
 tab calc      = str="%s%s"; echo "!calc $(echo ${str#\!calc} | bc -l)"
-tab ?         = ignore="%s%s"; awk '/^bang/ {print "!" $2;}' ~/.interrobangrc
-
-
+tab ?         = ignore="%s%s"; awk '/^bang/ {print $2;}' ~/.interrobangrc
+tab logout    = echo -e "cancel\nshutdown\nsleep\nreboot\nlogout" | grep "^%s%s"
 
