@@ -86,7 +86,7 @@ static int config_string(const char *str) {
 		}
 		else if (strncmp(opt,"col",3)==0)
 			sscanf(val,"%s %s %s %s %s %s",col[0],col[1],
-					opt[3],opt[4],opt[5],opt[6]);
+					col[3],col[4],col[5],col[6]);
 		else if (strncmp(opt,"bord",4)==0)
 			sscanf(val,"%dpx %s",&bpx,col[2]);
 		else if (strncmp(opt,"bang",4)==0)
