@@ -287,6 +287,7 @@ static int main_loop() {
 		if (e->state & ControlMask) {
 			if (key == 'u') line[(pos=0)] = '\0';
 			if (key == 'c') line[(pos=precomp)] = '\0';
+			if (key == 'a') { strcpy(line,complist[compcur]); pos = strlen(line); }
 		}
 		else if (key == XK_Return) breakcode = 1;
 		else if (key == XK_Escape) breakcode = -1;
@@ -330,23 +331,17 @@ static int main_loop() {
 			}
 			compcheck = False;
 		}
-		else {
-			if (!iscntrl(*txt)) {
-				part = strdup(&line[pos]);
-				line[pos] = '\0';
-				strncat(line,txt,len);
-				strcat(line,part); free(part);
-				pos+=len;
-				compcheck = False;
-			}
+		else if (!iscntrl(*txt)) {
+			part = strdup(&line[pos]);
+			line[pos] = '\0';
+			strncat(line,txt,len);
+			strcat(line,part); free(part);
+			pos+=len;
+			compcheck = False;
 		}
-		if ( key == XK_Tab && autocomp > 0 ) {
-			strcpy(line,complist[compcur]);
-			pos = strlen(line);
-		}
-		else if ( key == XK_Tab || key == XK_ISO_Left_Tab || 
-				key == XK_Down || key == XK_Up ||
-				(breakcode == 0 && autocomp > 0 && pos >= autocomp) ) {
+		if ( key == XK_Tab || key == XK_ISO_Left_Tab || 
+			key == XK_Down || key == XK_Up ||
+			( !(iscntrl(*txt)) && breakcode == 0 && autocomp > 0 && pos >= autocomp) ) {
 			if (!compcheck) {
 				precomp = strlen(line);
 				if (complist) {
