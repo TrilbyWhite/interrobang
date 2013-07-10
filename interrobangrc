@@ -29,6 +29,6 @@ bang logout   = case "%s" in shutdown) sudo systemctl poweroff ;; sleep) sudo sy
 tab default   = percontation "%s" %s | sort -u
 #tab default   = compgen -P "%s" -cf %s
 tab calc      = str="%s%s"; echo "!calc $(echo ${str#\!calc} | bc -l)"
-tab ?         = ignore="%s%s"; awk '/^bang/ {print $2;}' ~/.interrobangrc
+tab ?         = ignore="%s%s"; awk '/^bang/ {print "!"$2" ";}' ~/.interrobangrc
 tab logout    = echo -e "cancel\nshutdown\nsleep\nreboot\nlogout" | grep "^%s%s"
 
