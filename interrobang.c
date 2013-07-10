@@ -82,7 +82,7 @@ static int config_string(const char *str) {
 		if (strncmp(opt,"font",4)==0) strncpy(font,val,MAX_LINE-1);
 		else if (strncmp(opt,"geom",4)==0) {
 			if (strncmp(val,"bot",3)==0) y = -2;
-			else sscanf(val,"%dx%d+%d+%d",&w,&h,&x,&y);
+			else sscanf(val,"%dx%d%d%d",&w,&h,&x,&y);
 		}
 		else if (strncmp(opt,"col",3)==0)
 			sscanf(val,"%s %s %s %s %s %s",col[0],col[1],
