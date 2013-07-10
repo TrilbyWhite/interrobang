@@ -81,7 +81,7 @@ static int config_string(const char *str) {
 	if (strncmp(cmd,"set",3)==0) {
 		if (strncmp(opt,"font",4)==0) strncpy(font,val,MAX_LINE-1);
 		else if (strncmp(opt,"geom",4)==0) {
-			if (strncmp(val,"bot",3)==0) y = -1;
+			if (strncmp(val,"bot",3)==0) y = -2;
 			else sscanf(val,"%dx%d+%d+%d",&w,&h,&x,&y);
 		}
 		else if (strncmp(opt,"col",3)==0)
@@ -203,7 +203,9 @@ static int init_X() {
 	osgc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
 	fh = fss[0]->ascent + 1;
 	if (!h) h = fh + fss[0]->descent + 1;
-	if (y == -1) y = DisplayHeight(dpy,scr) - h;
+	if (y == -2) y = DisplayHeight(dpy,scr) - h;
+	if (y == -1) y = (DisplayHeight(dpy,scr) - h)/2;
+	if (x == -1) x = (DisplayWidth(dpy,scr) - w)/2;
 	/* grab keys */
 	for (i = 0; i < 1000; i++) {
 		if (XGrabKeyboard(dpy,root,True,GrabModeAsync,GrabModeAsync,
