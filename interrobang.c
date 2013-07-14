@@ -55,7 +55,7 @@ typedef struct Bang {
 } Bang;
 
 static Display *dpy;
-static int nbangs,scr,fh,x=0,y=0,w=0,h=0,hush=-1,autocomp=-1,bpx=0;
+static int nbangs,scr,fh,x=0,y=0,w=0,h=0,hush=-1,autocomp=-1,bpx=0,margin=-80;
 static Window root, win;
 static Pixmap buf;
 static GC gc, bgc, ogc, osgc;
@@ -95,6 +95,8 @@ static int config_string(const char *str) {
 			run_hook = strdup(val);
 		else if (strncmp(opt,"auto",4)==0)
 			autocomp = atoi(val);
+		else if (strncmp(opt,"margin",6)==0)
+			margin = atoi(val);
 		else if (strncmp(opt,"list",4)==0)
 			show_opts = (val[0]=='T'||val[0]=='t');
 		else if (strncmp(opt,"last",4)==0)
@@ -243,31 +245,27 @@ static int init_X() {
 }
 
 static int options(int n,const char **opt, int cur, int x) {
-	int i, j, wx, tx;
-	tx = XmbTextEscapement(xfs,">",1);
+	x+= abs(margin);
+	int i, j, k, wx, m, tx = XmbTextEscapement(xfs,">",1);
 	const char *lw;
-	for (j = n - 1; j; j--) {
-		for (wx = w, i = j; wx > x+tx && i > -1; i--) {
+	int *offset = (int *) calloc(n,sizeof(int));
+	for (j = 0; j < n; j++) {
+		wx = x+tx;
+		for (i = j; i < n && wx < w; i++) {
 			lw = strrchr(opt[i],' ');
 			if (!lw || *(++lw) == '\0' || !last_word) lw = opt[i];
-			wx -= XmbTextEscapement(xfs,lw,strlen(lw) +
-					XmbTextEscapement(xfs," ",1));
+			offset[i] = wx;
+			wx += XmbTextEscapement(xfs,lw,strlen(lw))+XmbTextEscapement(xfs," ",1);
 		}
-		if (i < cur) break;
+		if (i > cur) break;
 	}
-	wx = w;
-	if (n > 1 && j - i < n)
-		XmbDrawImageString(dpy,buf,xfs,ogc,(wx-=tx),fh,">",1);
-	for (i = j; wx > x && i >= 0; i--) {
-		lw = strrchr(opt[i],' ');
-		if (!lw || *(++lw) == '\0' || !last_word) lw = opt[i];
-		tx = XmbTextEscapement(xfs,lw,strlen(lw));
-		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),fh,
-				lw,strlen(lw));
-		tx = XmbTextEscapement(xfs," ",1);
-		XmbDrawImageString(dpy,buf,xfs,(i==cur?osgc:ogc),(wx-=tx),
-				fh," ",1);
+	m = (margin < 0 ? w - wx : 0);
+	for (k = j; k < i; k++) {
+		lw = strrchr(opt[k],' ');
+		if (!lw || *(++lw) == '\0' || !last_word) lw = opt[k];
+		XmbDrawImageString(dpy,buf,xfs,(k==cur?osgc:ogc),offset[k]+m,fh,lw,strlen(lw));
 	}
+	free(offset);
 }
 
 static int main_loop() {
@@ -343,7 +341,8 @@ static int main_loop() {
 		}
 		if ( key == XK_Tab || key == XK_ISO_Left_Tab || 
 			key == XK_Down || key == XK_Up ||
-			( !(iscntrl(*txt)) && breakcode == 0 && autocomp > 0 && pos >= autocomp) ) {
+			( key != XK_Left && key != XK_Right &&
+			breakcode == 0 && autocomp > 0 && pos >= autocomp ) ) {
 			if (!compcheck) {
 				precomp = strlen(line);
 				if (complist) {
@@ -403,7 +402,7 @@ static int main_loop() {
 		tx = XmbTextEscapement(xfs,line,pos);
 		XDrawLine(dpy,buf,gc,tx+5,2,tx+5,fh);
 		if (show_opts && compcheck)
-			options(compcount,(const char **)complist,compcur,tx + 100);
+			options(compcount,(const char **)complist,compcur,tx);
 		XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 		XFlush(dpy);
 		if (breakcode) break;

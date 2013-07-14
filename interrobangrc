@@ -16,6 +16,7 @@ set run_hook  = %s
 set autocomp  = 1
 set list      = true
 set last      = true
+set margin    = -80
 
 bang term     = urxvtc -e %s
 bang web      = dwb %s
