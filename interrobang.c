@@ -386,7 +386,11 @@ static int main_loop() {
 				compcur = -1;
 			}
 			if (compcheck) {
-				if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
+				if ( (key==XK_Tab||key==XK_ISO_Left_Tab)&&compcount ) {
+					strcpy(line,complist[compcur]);
+					pos = strlen(line);
+				}
+				else if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
 				}
 				else if ( (++compcur) >= compcount ) compcur = 0;
