@@ -203,8 +203,8 @@ static int init_X() {
 	XAllocNamedColor(dpy,cmap,col[6],&color,&color);
 	val.foreground = color.pixel;
 	osgc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
-	fh = fss[0]->ascent + 1;
-	if (!h) h = fh + fss[0]->descent + 1;
+	fh = fss[0]->ascent;
+	if (!h) h = fh + fss[0]->descent;
 	if (y == -2) y = DisplayHeight(dpy,scr) - h;
 	if (y == -1) y = (DisplayHeight(dpy,scr) - h)/2;
 	if (x == -1) x = (DisplayWidth(dpy,scr) - w)/2;
