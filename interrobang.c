@@ -387,6 +387,7 @@ static int main_loop() {
 			}
 			if (compcheck) {
 				if ( (key==XK_Tab||key==XK_ISO_Left_Tab)&&compcount ) {
+					if (compcur == -1) compcur = 0;
 					strcpy(line,complist[compcur]);
 					pos = strlen(line);
 				}
@@ -394,10 +395,10 @@ static int main_loop() {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
 				}
 				else if ( (++compcur) >= compcount ) compcur = 0;
-				if (autocomp < 1) {
-					strcpy(line,complist[compcur]);
-					pos = strlen(line);
-				}
+//				if (autocomp < 1) {
+//					strcpy(line,complist[compcur]);
+//					pos = strlen(line);
+//				}
 			}
 		}
 		/* draw */
