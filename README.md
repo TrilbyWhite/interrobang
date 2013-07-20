@@ -1,3 +1,6 @@
+EDIT: as interrobang seems to have surpassed my previous "flagship" project (slider) in the number of 'stargazers' I guess I should really make a proper man page.  That will be ready within a week.
+-J McClure 20 July 2013
+
 INTERROBANG: a tiny launcher menu packing a big bang (syntax)
 
 Interrobang is a launcher menu somewhat similar to dmenu.  Interrobang has two unique features:
