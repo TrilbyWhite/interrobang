@@ -1,0 +1,84 @@
+'\" t
+.\" Manual page created with latex2man on Mon Jul 22 17:51:56 EDT 2013
+.\" NOTE: This file is generated, DO NOT EDIT.
+.de Vb
+.ft CW
+.nf
+..
+.de Ve
+.ft R
+
+.fi
+..
+.TH "INTERROBANG" "1" "22 July 2013" "launcher menu " "launcher menu "
+.SH NAME
+
+.PP
+Interrobang
+\- A time launcher menu packing a big bang syntax. 
+.PP
+.SH SYNOPSIS
+
+interrobang
+[\fB\-h\fP]
+[\fB\-v\fP]
+[\fB\-o\fP\fI\fB \fPconfig\-string\fP]
+[\fB\-\fP]
+[\fIhushbang\fP]
+.PP
+.SH DESCRIPTION
+
+Interrobang
+is a scriptable launcher menu with a customizable shortcut syntax and completion options. 
+.PP
+.SH OPTIONS
+
+.TP
+\fB\-h\fP
+ Print help and exit 
+.TP
+\fB\-v\fP
+ Print version information and exit 
+.TP
+\fB\-o\fP\fI\fB \fPconfig\-string\fP
+ Override a setting from the runtime configuration with a full line in quotes with a syntax matching that described below for configuration files 
+.TP
+\fB\-\fP
+ Read configuration file from the standard input 
+.TP
+\fIhushbang\fP
+ TODO 
+.PP
+.SH CONFIGURATION
+
+Runtime configuration is read from the following files, in order, stopping at the first file found: 
+stdin
+if \fB\-\fP
+is specified on the command line, 
+$XDG_CONFIG_HOME/interrobang/config,
+$HOME/.interrobangrc\&.
+.PP
+A template configuration file is distributed as /usr/share/interrobang/config
+.PP
+TODO 
+.PP
+.SH AUTHOR
+
+Copyright (C)2013 Jesse McClure 
+.br
+License GPLv3: GNU GPL version 3 \fBhttp://gnu.org/licenses/gpl.html\fP
+.br
+This is free software: you are free to change and redistribute it. 
+.br
+There is NO WARRANTY, to the extent permitted by law. 
+.PP
+Submit bug reports via github: 
+.br
+\fBhttp://github/com/TrilbyWhite/interrobang.git\fP
+.PP
+I would like your feedback. If you enjoy Interrobang
+see the bottom of the site below for detauls on submitting comments: 
+.br
+\fBhttp://mccluresk9.com/software.html\fP
+.PP
+.\" NOTE: This file is generated, DO NOT EDIT.

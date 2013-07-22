@@ -1,0 +1,56 @@
+\documentclass{latex2man}
+
+\begin{Name}{1}{interrobang}{Jesse McClure}{launcher menu}{Interrobang - A tiny launcher menu packing a big bang syntax}
+
+\Prog{Interrobang} - A time launcher menu packing a big bang syntax.
+
+\end{Name}
+
+\section{Synopsis}
+\Prog{interrobang}
+	\oOpt{-h}
+	\oOpt{-v}
+	\oOptArg{-o}{\SP config-string}
+	\oOpt{-}
+	\oArg{hushbang}
+
+\section{Description}
+\Prog{Interrobang} is a scriptable launcher menu with a customizable shortcut syntax and completion options.
+
+\section{Options}
+\begin{description}
+\item[\Opt{-h}]
+	Print help and exit
+\item[\Opt{-v}]
+	Print version information and exit
+\item[\OptArg{-o}{\SP config-string}]
+	Override a setting from the runtime configuration with a full line in quotes with a syntax matching that described below for configuration files
+\item[\Opt{-}]
+	Read configuration file from the standard input
+\item[\Arg{hushbang}]
+	TODO
+\end{description}
+
+\section{Configuration}
+Runtime configuration is read from the following files, in order, stopping at the first file found:
+\File{stdin} if \Opt{-} is specified on the command line,
+\File{\$XDG_CONFIG_HOME/interrobang/config},
+\File{\$HOME/.interrobangrc}.
+
+A template configuration file is distributed as \File{/usr/share/interrobang/config}
+
+TODO
+
+\section{Author}
+Copyright \copyright 2013 Jesse McClure \\
+License GPLv3: GNU GPL version 3 \URL{http://gnu.org/licenses/gpl.html} \\
+This is free software: you are free to change and redistribute it. \\
+There is NO WARRANTY, to the extent permitted by law.
+
+Submit bug reports via github: \\
+\URL{http://github/com/TrilbyWhite/interrobang.git}
+
+I would like your feedback.  If you enjoy \Prog{Interrobang} see the bottom of the site below for detauls on submitting comments: \\
+\URL{http://mccluresk9.com/software.html}
+
+\LatexManEnd
