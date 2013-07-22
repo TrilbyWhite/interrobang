@@ -15,6 +15,9 @@ ${PROG}: ${PROG}.c
 debug: ${PROG}.c
 	@gcc -o -g ${PROG} ${PROG}.c ${CFLAGS} -DDEBUG
 
+# The following is for my own convenience.
+# interrobang.1 is available in the github repo
+# so users will *not* need latex as  a build dep.
 interrobang.1: man1.tex
 	@latex2man man1.tex interrobang.1
 
