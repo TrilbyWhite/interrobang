@@ -155,7 +155,7 @@ static int config(int argc, const char **argv) {
 	if (rc != stdin) fclose(rc);
 	/* check command line for option overrides */
 	for (i = 1; i < argc - 1; i++)
-		if (strncmp(argv[i],"-opt",4)==0) config_string(argv[i+1]);
+		if (argv[i][0]=='-' && argv[i][1]=='o') config_string(argv[i+1]);
 	strcpy(line,"");
 	return 0;
 }
