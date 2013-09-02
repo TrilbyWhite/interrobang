@@ -4,7 +4,7 @@ ALTER	=	percontation
 PREFIX	?=	/usr
 LDFLAGS	+=	-lX11
 
-all: ${PROG} ${ALTER} interrobang.1
+all: ${PROG} ${ALTER}
 
 ${ALTER}: ${ALTER}.c
 	@gcc -o ${ALTER} ${ALTER}.c ${CFLAGS}
@@ -15,14 +15,8 @@ ${PROG}: ${PROG}.c
 debug: ${PROG}.c
 	@gcc -o -g ${PROG} ${PROG}.c ${CFLAGS} -DDEBUG
 
-# The following is for my own convenience.
-# interrobang.1 is available in the github repo
-# so users will *not* need latex as  a build dep.
-interrobang.1: man1.tex
-	@latex2man man1.tex interrobang.1
-
 clean:
-	@rm -rf ${PROG} ${ALTER} interrobang.1
+	@rm -rf ${PROG} ${ALTER}
 
 install: all
 	@install -Dm755 ${PROG} ${DESTDIR}${PREFIX}/bin/${PROG}

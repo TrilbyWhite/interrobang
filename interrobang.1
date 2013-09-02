@@ -1,5 +1,5 @@
 '\" t
-.\" Manual page created with latex2man on Mon Jul 22 17:51:56 EDT 2013
+.\" Manual page created with latex2man on Mon Sep  2 14:25:24 EDT 2013
 .\" NOTE: This file is generated, DO NOT EDIT.
 .de Vb
 .ft CW
@@ -10,12 +10,12 @@
 
 .fi
 ..
-.TH "INTERROBANG" "1" "22 July 2013" "launcher menu " "launcher menu "
+.TH "INTERROBANG" "1" "02 September 2013" "launcher menu " "launcher menu "
 .SH NAME
 
 .PP
 Interrobang
-\- A time launcher menu packing a big bang syntax. 
+\- A tiny launcher menu packing a big bang syntax. 
 .PP
 .SH SYNOPSIS
 
@@ -59,6 +59,69 @@ $XDG_CONFIG_HOME/interrobang/config,
 $HOME/.interrobangrc\&.
 .PP
 A template configuration file is distributed as /usr/share/interrobang/config
+.PP
+Each non\-empty non\-comment line in a configuration file must start with \fBset\fP,
+\fBbang\fP,
+or \fBtab\fP\&.
+Lines starting with a # are ignored as comments. 
+.PP
+.SS SET
+set \fBparameter\fP
+= \fIsetting\fP
+.PP
+The following parameters can be set: 
+.PP
+.TP
+\fBfont\fP
+ Select a font as either an XLFD font string, or a string that would be matched by font\-config (fc\-match) 
+.TP
+\fBgeometry\fP
+ One of \fItop\fP,
+\fIbottom\fP,
+or a geometry string as \fIW\fPx\fIH\fP+\fIX\fP+\fIY\fP\&.
+If \fIX\fP
+or \fIY\fP
+are \-1 the bar will be centered in that direction. 
+.TP
+\fBcolors\fP
+ Provide six #RRGGBB color strings for foreground and background for each of normal text, option listings, and selected options. 
+.TP
+\fBborder\fP
+ Select a border width in pixels and an #RRGGBB color for the boarder as "Npx #RRGGBB" 
+.TP
+\fBbangchar\fP
+ Specify the "bang" character. ! is the default, : is a common alternative. 
+.TP
+\fBrun_hook\fP
+ A format string into which the selected command will be placed before running. This can be used to store a history of commands. This string should contain one %s which will be replaced by the selected command. 
+.TP
+\fBautocomp\fP
+ Whether commands should be autocompleted. Select 0 for no autocompletion, or a positive number of characters as the minimum number required from the user before completion options are provided. 
+.TP
+\fBlist\fP
+ Completion options displayed in bar: true or false. 
+.TP
+\fBlast\fP
+ Last "word" only in completion options: true or false. 
+.TP
+\fBmargin\fP
+ Number of pixels for the margin between the displayed completion options and the end of the entered text. Positive values will left\-align the options at this margin, while negative values will right\-align the options in the window and use this value as the minimum space between entered text and the first option. 
+.TP
+\fBshell\fP
+ Specify an alternative shell for launching commands 
+.TP
+\fBflags\fP
+ Specify alternative flags to the shell. The default \-c can be replaced with \-ic for an interactive shell which will allow for the use of shell rc\-defined aliases. 
+.PP
+.SS BANG
+bang \fBkeyword\fP
+= \fIcommand\-string\fP
+.PP
+TODO 
+.PP
+.SS TAB
+tab \fBkeyword\fP
+= \fIcommand\-string\fP
 .PP
 TODO 
 .PP

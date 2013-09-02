@@ -67,7 +67,7 @@ static const char *hushstr = NULL;
 static char bangchar = '!', font[MAX_LINE] = "fixed",
 		line[MAX_LINE+4], bang[MAX_LINE], cmd[2*MAX_LINE],
 		completion[MAX_LINE], defaultcomp[MAX_LINE] = "",
-		*run_hook = NULL;
+		shell_flags[10] = "-c", *run_hook = NULL;
 static char col[7][8] = {
 	/* BG		FG			BRD */
 	"#121212", "#EEEEEE", "#000000",
@@ -93,6 +93,8 @@ static int config_string(const char *str) {
 			bangchar = val[0];
 		else if (strncmp(opt,"run",3)==0)
 			run_hook = strdup(val);
+		else if (strncmp(opt,"shell",5)==0)
+			strncpy(shell_flags,val,9);
 		else if (strncmp(opt,"auto",4)==0)
 			autocomp = atoi(val);
 		else if (strncmp(opt,"margin",6)==0)
@@ -193,14 +195,14 @@ static int init_X() {
 	XAllocNamedColor(dpy,cmap,col[0],&color,&color);
 	val.foreground = color.pixel;
 	gc = XCreateGC(dpy,root,GCForeground,&val);
-	XAllocNamedColor(dpy,cmap,col[3],&color,&color);
-	val.background = color.pixel;
 	XAllocNamedColor(dpy,cmap,col[4],&color,&color);
+	val.background = color.pixel;
+	XAllocNamedColor(dpy,cmap,col[3],&color,&color);
 	val.foreground = color.pixel;
 	ogc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
-	XAllocNamedColor(dpy,cmap,col[5],&color,&color);
-	val.background = color.pixel;
 	XAllocNamedColor(dpy,cmap,col[6],&color,&color);
+	val.background = color.pixel;
+	XAllocNamedColor(dpy,cmap,col[5],&color,&color);
 	val.foreground = color.pixel;
 	osgc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
 	fh = fss[0]->ascent;
@@ -287,7 +289,10 @@ static int main_loop() {
 		if (e->state & ControlMask) {
 			if (key == 'u') line[(pos=0)] = '\0';
 			if (key == 'c') line[(pos=precomp)] = '\0';
-			if (key == 'a') { strcpy(line,complist[compcur]); pos = strlen(line); }
+			if (key == 'a') {
+				strcpy(line,complist[compcur]);
+				pos = strlen(line);
+			}
 		}
 		else if (key == XK_Return) breakcode = 1;
 		else if (key == XK_Escape) breakcode = -1;
@@ -395,10 +400,6 @@ static int main_loop() {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
 				}
 				else if ( (++compcur) >= compcount ) compcur = 0;
-//				if (autocomp < 1) {
-//					strcpy(line,complist[compcur]);
-//					pos = strlen(line);
-//				}
 			}
 		}
 		/* draw */
@@ -462,7 +463,7 @@ static int process_command() {
 			snprintf(cmd,MAX_LINE*2,run_hook,tmp);
 			free(tmp); free(run_hook);
 		}
-		const char *argv[4]; argv[0] = "/bin/sh"; argv[1] = "-c";
+		const char *argv[4]; argv[0] = "/bin/sh"; argv[1] = shell_flags;
 		argv[3] = NULL; argv[2] = cmd;
 		execv(argv[0],argv);
 	}
