@@ -145,9 +145,18 @@ static int config(int argc, const char **argv) {
 	/* open and read rc file */
 	if (!rc) {
 		chdir(getenv("XDG_CONFIG_HOME"));
-		if (chdir("interrobang")==0) rc = fopen("config","r");
+		if (chdir("interrobang")==0)
+			rc = fopen("config","r");
 	}
-	if (!rc) { chdir(getenv("HOME")); rc = fopen(".interrobangrc","r"); }
+	if (!rc) {
+		chdir(getenv("HOME"));
+		chdir(".config/interrobang");
+		rc = fopen("config","r");
+	}
+	if (!rc) {
+		chdir(getenv("HOME"));
+		rc = fopen(".interrobangrc","r");
+	}
 	chdir(cwd);
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
