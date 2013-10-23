@@ -399,16 +399,21 @@ static int main_loop() {
 				if (complist) compcheck = True;
 				compcur = -1;
 			}
-			if (compcheck) {
-				if ( (key==XK_Tab||key==XK_ISO_Left_Tab)&&compcount ) {
-					if (compcur == -1) compcur = 0;
-					strcpy(line,complist[compcur]);
-					pos = strlen(line);
-				}
-				else if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
+		if ( compcheck && key == XK_Tab || key == XK_ISO_Left_Tab || 
+			key == XK_Down || key == XK_Up) {
+//				if ( (key==XK_Tab||key==XK_ISO_Left_Tab)&&compcount ) {
+//					if (compcur == -1) compcur = 0;
+//					strcpy(line,complist[compcur]);
+//					pos = strlen(line);
+//				}
+				/*else*/ if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
 				}
-				else if ( (++compcur) >= compcount ) compcur = 0;
+				else if ( (++compcur) >= compcount ) {
+					compcur = 0;
+				}
+				strcpy(line,complist[compcur]);
+				pos = strlen(line);
 			}
 		}
 		/* draw */
@@ -422,7 +427,8 @@ static int main_loop() {
 		XFlush(dpy);
 		if (breakcode) break;
 	}
-	if (autocomp > 0 && compcheck) strcpy(line,complist[compcur]);
+	if (autocomp > 0 && compcheck && compcur != -1)
+		strcpy(line,complist[compcur]);
 	if (complist) {
 		for (i = 0; i < compcount; i++) free(complist[i]);
 		free(complist);
