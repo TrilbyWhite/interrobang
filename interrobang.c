@@ -149,6 +149,8 @@ static int config(int argc, const char **argv) {
 		rc = fopen("config","r");
 	if (!rc && chdir(getenv("HOME"))==0 )
 		rc = fopen(".interrobangrc","r");
+	if (!rc && chdir("/usr/share/interrobang")==0 )
+		rc = fopen(".config","r");
 	chdir(cwd);
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
@@ -391,24 +393,18 @@ static int main_loop() {
 				if (complist) compcheck = True;
 				compcur = 0;
 			}
-		if ( compcheck && key == XK_Tab || key == XK_ISO_Left_Tab || 
-			key == XK_Down || key == XK_Up) {
-				if (compcur || pos == strlen(complist[compcur])) {
-//					if ( (key==XK_Tab||key==XK_ISO_Left_Tab)&&compcount ) {
-//						if (compcur == -1) compcur = 0;
-//						strcpy(line,complist[compcur]);
-//						pos = strlen(line);
-//					}
-					/*else*/ if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
+		}
+		if ( compcheck && (key == XK_Tab || key == XK_ISO_Left_Tab || 
+				key == XK_Down || key == XK_Up)) {
+			if (compcur || pos == strlen(complist[compcur])) {
+				if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
-					}
-					else if ( (++compcur) >= compcount ) {
-						compcur = 0;
-					}
 				}
-				strcpy(line,complist[compcur]);
-				pos = strlen(line);
+				else if ( (++compcur) >= compcount ) {
+					compcur = 0;
+				}
 			}
+			strcpy(line,complist[compcur]);
 		}
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
