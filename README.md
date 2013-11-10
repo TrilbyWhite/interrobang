@@ -1,16 +1,59 @@
-EDIT: as interrobang seems to have surpassed my previous "flagship" project (slider) in the number of 'stargazers' I guess I should really make a proper man page.  That will be ready within a week.
--J McClure 20 July 2013
+# INTERROBANG
 
-INTERROBANG: a tiny launcher menu packing a big bang (syntax)
+**Interrobang** - *A tiny launcher menu packing a big bang syntax*
 
-Interrobang is a launcher menu somewhat similar to dmenu.  Interrobang has two unique features:
+Author: Jesse McClure, Copyright 2013
+License: GPLv3
 
-1) Tab completion for both commands and filename parameters (use bash completion or the new companion completer "percontation")
+## Synopsis
 
-2) A "bang syntax" inspired by the duckduckgo search engine.
+`interrobang [-h] [-v] [-o config-string] [-] [hushbang]`
 
-User defined bangs, and the look/feel of interrobang can be customized in ~/.interrobangrc.  A template for this file is available in this repo, but it is not installed with the Makefile or PKGBUILD - you must copy it manually, or just use it as a template for your own.
+## Description
 
-Interrobang is new and under active development.  This page will be udpated periodically, but for the most up to date information, see here:
-https://bbs.archlinux.org/viewtopic.php?pid=1248447#p1248447
+*Interrobang* is a scriptable launcher menu with a customizable shortcut syntax and completion options. 
 
+## Options
+
+-	*-h*
+	Print help and exit 
+-	*-v*
+	Print version information and exit 
+-	*-o* **config-string** 
+	Override a setting from the runtime configuration with a full line in quotes with a syntax matching that described below for configuration files 
+-	*-*
+	Read configuration file from the standard input 
+-	**hushbang**
+	Specify a bang syntax (see below) to use by default 
+
+## Configuration
+
+Runtime configuration is read from the following files, in order, stopping at the first file found: 
+*stdin* if *-* is specified on the command line, 
+`$XDG_CONFIG_HOME/interrobang/config`,
+`$HOME/.interrobangrc`.
+
+A template configuration file is distributed as `/usr/share/interrobang/config`
+
+Each non-empty non-comment line in a configuration file must start with
+*set*, *bang*, or *tab*.
+Lines starting with a `#` are ignored as comments.
+
+### Set
+
+```
+set parameter = setting
+```
+
+
+The following parameters can be set: 
+
+-	font
+	Select a font as either an XLFD font string, or a string that would be matched by font-config (fc-match) 
+-	geometry
+	One of `top`, `bottom`, or a geometry string as `WxH+X+Y`. If *X*
+or *Y* are -1 the bar will be centered in that direction.
+-	colors
+	Provide six `#RRGGBB` color strings for foreground and background for each of normal text, option listings, and selected options. 
+- border
+	Select a border width in pixels and an #RRGGBB color for the boarder as `Npx #RRGGBB` 
