@@ -15,15 +15,24 @@ License: GPLv3
 
 ## Options
 
--	*-h*
+*-h*
+
 	Print help and exit 
--	*-v*
+
+*-v*
+
 	Print version information and exit 
--	*-o* **config-string** 
+
+*-o* **config-string** 
+
 	Override a setting from the runtime configuration with a full line in quotes with a syntax matching that described below for configuration files 
--	*-*
+
+*-*
+
 	Read configuration file from the standard input 
--	**hushbang**
+
+**hushbang**
+
 	Specify a bang syntax (see below) to use by default 
 
 ## Configuration
@@ -48,13 +57,20 @@ set parameter = setting
 
 The following parameters can be set: 
 
--	font
+font
 
 	Select a font as either an XLFD font string, or a string that would be matched by font-config (fc-match) 
--	geometry
 
-	One of `top`, `bottom`, or a geometry string as `WxH+X+Y`. If *X* or *Y* are -1 the bar will be centered in that direction.
--	colors
+geometry
+
+	One of `top`, `bottom`, or a geometry string as `WxH+X+Y`. If *X*
+or *Y* are -1 the bar will be centered in that direction.
+
+colors
+
 	Provide six `#RRGGBB` color strings for foreground and background for each of normal text, option listings, and selected options. 
-- border
+
+border
+
 	Select a border width in pixels and an #RRGGBB color for the boarder as `Npx #RRGGBB` 
+
