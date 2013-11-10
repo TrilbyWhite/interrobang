@@ -28,7 +28,7 @@
 \item[\Opt{-}]
 	Read configuration file from the standard input
 \item[\Arg{hushbang}]
-	TODO
+	Specify a bang syntax (see below) to use by default
 \end{description}
 
 \section{Configuration}
@@ -76,12 +76,34 @@ The following parameters can be set:
 \subsection{Bang}
 bang \Opt{keyword} = \Arg{command-string}
 
-TODO
+Bangs - inspired by the duckduckgo search engine - are customizable
+commands which allow the user to extend interrobang's functionality in
+creative ways. If the first character entered in interrobang matches the
+bangchar (! by default), the word immediately following the bangchar is
+read as the bang.  This bang is looked up in the configuration, and the
+remainder of the entry takes the place of the \%s in the \Arg{command-string}.
+
+See the default configuration for examples of how bangs can be
+customized.
 
 \subsection{Tab}
 tab \Opt{keyword} = \Arg{command-string}
 
-TODO
+For each defined bang, there can be a separate tab-completion mechanism.
+Various examples can be found in the default configuration file.  The
+special keyword "default" is used for tab-completion for regular
+entries.  Two default options are provided for either bash's built in
+completion with compgen, or with the percontation tool which is
+distributed with interrobang.
+
+\Arg{command-string} must be a format string with two \%s entries.  The
+first \%s with all but the last "word" in the current entry, while the
+second will contain this last (potentially partial) "word".  This allows
+for completion on the entire line, or based just on the word being
+typed.
+
+See the default configuration for examples of how tab completion can be
+customized.
 
 \section{Author}
 Copyright \copyright 2013 Jesse McClure \\

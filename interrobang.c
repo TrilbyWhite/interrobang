@@ -39,7 +39,7 @@
 	"   -h         Show this help message and exit.\n" \
 	"   -v         Show version information and exit.\n" \
 	"   -o <opt>   Override a single setting from rc file\n" \
-	"   -          Override ~/.interrobangrc with configuration " \
+	"   -          Override rc file with configuration " \
 			"read from stdin\n\n" \
 	"Hushbang:\n" \
 	"   Provide any bang (without bangchar) to have the\n" \
@@ -55,7 +55,8 @@ typedef struct Bang {
 } Bang;
 
 static Display *dpy;
-static int nbangs,scr,fh,x=0,y=0,w=0,h=0,hush=-1,autocomp=-1,bpx=0,margin=-80;
+static int nbangs,scr,fh,x=0,y=0,w=0,h=0;
+static int hush=-1,autocomp=-1,bpx=1,margin=-80;
 static Window root, win;
 static Pixmap buf;
 static GC gc, bgc, ogc, osgc;
@@ -67,12 +68,13 @@ static const char *hushstr = NULL;
 static char bangchar = '!', font[MAX_LINE] = "fixed",
 		line[MAX_LINE+4], bang[MAX_LINE], cmd[2*MAX_LINE],
 		completion[MAX_LINE], defaultcomp[MAX_LINE] = "",
-		shell_flags[10] = "-c", *run_hook = NULL;
+		shell_flags[10] = "-c", *run_hook = NULL,
+ 		*_shell = "/bin/sh", *shell = NULL;
 static char col[7][8] = {
-	/* BG		FG			BRD */
-	"#121212", "#EEEEEE", "#000000",
+	/* BG       FG         BRD */
+	"#68B0E0", "#000000", "#BBE0EE",
 	"#242424", "#48E084", 
-	"#484848","#64FFAA"
+	"#484848", "#64FFAA"
 };
 
 static int config_string(const char *str) {
@@ -94,6 +96,8 @@ static int config_string(const char *str) {
 		else if (strncmp(opt,"run",3)==0)
 			run_hook = strdup(val);
 		else if (strncmp(opt,"shell",5)==0)
+			shell = strdup(val);
+		else if (strncmp(opt,"flags",5)==0)
 			strncpy(shell_flags,val,9);
 		else if (strncmp(opt,"auto",4)==0)
 			autocomp = atoi(val);
@@ -127,7 +131,8 @@ static int config_string(const char *str) {
 static int config(int argc, const char **argv) {
 	FILE *rc=NULL; char *c; int i;
 	const char *cwd = getenv("PWD");
-	/* read command line, ignoring "-opt" settings */
+	shell = _shell;
+	/* read command line, ignoring "-o" settings */
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			char flag = (argv[i][1] == '-' ? argv[i][2] : argv[i][1]);
@@ -143,14 +148,14 @@ static int config(int argc, const char **argv) {
 		else hushstr = argv[i];
 	}
 	/* open and read rc file */
-	if (!rc && chdir(getenv("XDG_CONFIG_HOME"))==0 && chdir("interrobang")==0 )
+	if (!rc && chdir(getenv("XDG_CONFIG_HOME"))==0 &&
+			chdir("interrobang")==0 )
 		rc = fopen("config","r");
-	if (!rc && chdir(getenv("HOME"))==0 && chdir(".config/interrobang")==0 )
+	if (!rc && chdir(getenv("HOME"))==0 &&
+			chdir(".config/interrobang")==0 )
 		rc = fopen("config","r");
 	if (!rc && chdir(getenv("HOME"))==0 )
 		rc = fopen(".interrobangrc","r");
-	if (!rc && chdir("/usr/share/interrobang")==0 )
-		rc = fopen("config","r");
 	chdir(cwd);
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
@@ -224,7 +229,7 @@ static int init_X() {
 	XSetWindowAttributes wa;
 	wa.override_redirect = True;
 	wa.border_pixel = (XAllocNamedColor(dpy,cmap,col[2],&color,&color) ?
-		color.pixel : 0);
+			color.pixel : 0);
 	win = XCreateWindow(dpy,root,x,y,w,h,bpx,DefaultDepth(dpy,scr),
 			CopyFromParent,DefaultVisual(dpy,scr),
 			CWOverrideRedirect|CWBorderPixel,&wa);
@@ -250,7 +255,7 @@ static int init_X() {
 }
 
 static int options(int n,const char **opt, int cur, int x) {
-	x+= abs(margin);
+	x += abs(margin);
 	int i, j, k, wx, m, tx = XmbTextEscapement(xfs,">",1);
 	const char *lw;
 	int *offset = (int *) calloc(n,sizeof(int));
@@ -260,7 +265,8 @@ static int options(int n,const char **opt, int cur, int x) {
 			lw = strrchr(opt[i],' ');
 			if (!lw || *(++lw) == '\0' || !last_word) lw = opt[i];
 			offset[i] = wx;
-			wx += XmbTextEscapement(xfs,lw,strlen(lw))+XmbTextEscapement(xfs," ",1);
+			wx += XmbTextEscapement(xfs,lw,strlen(lw)) +
+					XmbTextEscapement(xfs," ",1);
 		}
 		if (i > cur) break;
 	}
@@ -268,7 +274,8 @@ static int options(int n,const char **opt, int cur, int x) {
 	for (k = j; k < i; k++) {
 		lw = strrchr(opt[k],' ');
 		if (!lw || *(++lw) == '\0' || !last_word) lw = opt[k];
-		XmbDrawImageString(dpy,buf,xfs,(k==cur?osgc:ogc),offset[k]+m,fh,lw,strlen(lw));
+		XmbDrawImageString(dpy,buf,xfs,(k==cur?osgc:ogc),
+				offset[k]+m,fh,lw,strlen(lw));
 	}
 	free(offset);
 }
@@ -348,9 +355,9 @@ static int main_loop() {
 			compcheck = False;
 		}
 		if ( key == XK_Tab || key == XK_ISO_Left_Tab || 
-			key == XK_Down || key == XK_Up ||
-			( key != XK_Left && key != XK_Right &&
-			breakcode == 0 && autocomp > 0 && pos >= autocomp ) ) {
+				key == XK_Down || key == XK_Up ||
+				( key != XK_Left && key != XK_Right &&
+				breakcode == 0 && autocomp > 0 && pos >= autocomp ) ) {
 			if (!compcheck) {
 				precomp = strlen(line);
 				if (complist) {
@@ -391,19 +398,19 @@ static int main_loop() {
 				}
 				pclose(compgen);
 				if (complist) compcheck = True;
-				compcur = 0;
+				compcur = -1;
 			}
 		}
 		if ( compcheck && (key == XK_Tab || key == XK_ISO_Left_Tab || 
 				key == XK_Down || key == XK_Up)) {
-			if (compcur || pos == strlen(complist[compcur])) {
+			//if (compcur || pos == strlen(complist[compcur])) {
 				if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
 					if ((--compcur) < 0 ) compcur = compcount - 1;
 				}
 				else if ( (++compcur) >= compcount ) {
 					compcur = 0;
 				}
-			}
+			//}
 			strcpy(line,complist[compcur]);
 		}
 		/* draw */
@@ -417,8 +424,8 @@ static int main_loop() {
 		XFlush(dpy);
 		if (breakcode) break;
 	}
-	if (autocomp > 0 && compcheck && compcur != -1)
-		strcpy(line,complist[compcur]);
+	if (autocomp > 0 && compcheck)
+		strcpy(line,complist[(compcur == -1 ? 0 : compcur)]);
 	if (complist) {
 		for (i = 0; i < compcount; i++) free(complist[i]);
 		free(complist);
@@ -430,6 +437,7 @@ static int main_loop() {
 }
 
 static int clean_up() {
+	if (shell != _shell) free(shell);
 	XFreeFontSet(dpy,xfs);
 	XFreeGC(dpy,bgc); XFreeGC(dpy,gc);
 	XDestroyIC(xic);
@@ -468,7 +476,7 @@ static int process_command() {
 			snprintf(cmd,MAX_LINE*2,run_hook,tmp);
 			free(tmp); free(run_hook);
 		}
-		const char *argv[4]; argv[0] = "/bin/sh"; argv[1] = shell_flags;
+		const char *argv[4]; argv[0] = shell; argv[1] = shell_flags;
 		argv[3] = NULL; argv[2] = cmd;
 		execv(argv[0],argv);
 	}

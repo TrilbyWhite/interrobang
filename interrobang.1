@@ -1,5 +1,5 @@
 '\" t
-.\" Manual page created with latex2man on Mon Sep  2 14:25:24 EDT 2013
+.\" Manual page created with latex2man on Sun Nov 10 14:55:34 EST 2013
 .\" NOTE: This file is generated, DO NOT EDIT.
 .de Vb
 .ft CW
@@ -10,7 +10,7 @@
 
 .fi
 ..
-.TH "INTERROBANG" "1" "02 September 2013" "launcher menu " "launcher menu "
+.TH "INTERROBANG" "1" "10 November 2013" "launcher menu " "launcher menu "
 .SH NAME
 
 .PP
@@ -47,7 +47,7 @@ is a scriptable launcher menu with a customizable shortcut syntax and completion
  Read configuration file from the standard input 
 .TP
 \fIhushbang\fP
- TODO 
+ Specify a bang syntax (see below) to use by default 
 .PP
 .SH CONFIGURATION
 
@@ -117,13 +117,36 @@ are \-1 the bar will be centered in that direction.
 bang \fBkeyword\fP
 = \fIcommand\-string\fP
 .PP
-TODO 
+Bangs \- inspired by the duckduckgo search engine \- are customizable 
+commands which allow the user to extend interrobang\&'s functionality in 
+creative ways. If the first character entered in interrobang matches the 
+bangchar (! by default), the word immediately following the bangchar is 
+read as the bang. This bang is looked up in the configuration, and the 
+remainder of the entry takes the place of the %s in the \fIcommand\-string\fP\&.
+.PP
+See the default configuration for examples of how bangs can be 
+customized. 
 .PP
 .SS TAB
 tab \fBkeyword\fP
 = \fIcommand\-string\fP
 .PP
-TODO 
+For each defined bang, there can be a separate tab\-completion mechanism. 
+Various examples can be found in the default configuration file. The 
+special keyword "default" is used for tab\-completion for regular 
+entries. Two default options are provided for either bash\&'s built in 
+completion with compgen, or with the percontation tool which is 
+distributed with interrobang. 
+.PP
+\fIcommand\-string\fP
+must be a format string with two %s entries. The 
+first %s with all but the last "word" in the current entry, while the 
+second will contain this last (potentially partial) "word". This allows 
+for completion on the entire line, or based just on the word being 
+typed. 
+.PP
+See the default configuration for examples of how tab completion can be 
+customized. 
 .PP
 .SH AUTHOR
 
