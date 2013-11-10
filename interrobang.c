@@ -150,7 +150,7 @@ static int config(int argc, const char **argv) {
 	if (!rc && chdir(getenv("HOME"))==0 )
 		rc = fopen(".interrobangrc","r");
 	if (!rc && chdir("/usr/share/interrobang")==0 )
-		rc = fopen(".config","r");
+		rc = fopen("config","r");
 	chdir(cwd);
 	if (!rc) return -1;
 	while (fgets(line,MAX_LINE,rc) != NULL) {
