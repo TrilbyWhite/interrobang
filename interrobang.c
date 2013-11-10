@@ -412,6 +412,7 @@ static int main_loop() {
 				}
 			//}
 			strcpy(line,complist[compcur]);
+			pos = strlen(line);
 		}
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
