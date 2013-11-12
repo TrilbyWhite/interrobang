@@ -30,6 +30,8 @@ bang ?        = echo "interrobang ignored \"%s\""
 bang logout   = case "%s" in shutdown) sudo systemctl poweroff ;; sleep) sudo systemctl suspend ;; reboot) sudo systemctl reboot ;; logout) killall xinit ;; cancel) exit ;; esac
 
 tab default   = percontation "%s" %s | sort -u
+#tab default   = percontation desktop path "%s" %s | sort -u
+#tab default   = percontation desktop+ path "%s" %s | sort -u
 #tab default   = compgen -P "%s" -cf %s
 tab calc      = str="%s%s"; echo "!calc $(echo ${str#\!calc} | bc -l)"
 tab ?         = ignore="%s%s"; awk '/^bang/ {print "!"$2" ";}' ~/.interrobangrc

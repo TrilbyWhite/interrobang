@@ -7,10 +7,10 @@ LDFLAGS	+=	-lX11
 all: ${PROG} ${ALTER}
 
 ${ALTER}: ${ALTER}.c
-	@gcc -o ${ALTER} ${ALTER}.c ${CFLAGS}
+	@gcc -o ${ALTER} ${ALTER}.c ${CFLAGS} -DDESK_CHAR="'>'"
 
 ${PROG}: ${PROG}.c
-	@gcc -o ${PROG} ${PROG}.c ${CFLAGS} ${LDFLAGS}
+	@gcc -o ${PROG} ${PROG}.c ${CFLAGS} ${LDFLAGS} -DDESK_CHAR="'>'"
 
 debug: ${PROG}.c
 	@gcc -o -g ${PROG} ${PROG}.c ${CFLAGS} -DDEBUG

@@ -450,7 +450,15 @@ static int clean_up() {
 
 static int process_command() {
 	int i, x = 0; char *c, *b = NULL;
-	strcpy(cmd,"");
+	cmd[0] = '\0';
+	if (line[0] == DESK_CHAR) {
+		snprintf(cmd,MAX_LINE*2,"percontation deskexec \"\" \"%s\"",line);
+		FILE *deskexec = popen(cmd,"r");
+		fgets(cmd,MAX_LINE,deskexec);
+		pclose(deskexec);
+		if (cmd[0] == '!') cmd[0] = bangchar;
+		strncpy(line,cmd,MAX_LINE); cmd[0] = '\0';
+	}
 	if (line[0] == bangchar) { /* "bang" syntax: */
 		/* x = length of bang */
 		if ( (c=strchr(line,' ')) != NULL) x = c - line - 1;
