@@ -14,12 +14,13 @@ source=("$_gitname::git://github.com/TrilbyWhite/interrobang.git")
 sha256sums=('SKIP')
 
 pkgver() {
-    cd "${srcdir}/$_gitname"
-    echo "0.$(git rev-list --count HEAD).$(git describe --always)"
+	cd "${srcdir}/$_gitname"
+	echo "0.$(git rev-list --count HEAD).$(git describe --always)"
 }
 
 build() {
-    cd "${srcdir}/$_gitname"
+	cd "${srcdir}/$_gitname"
+	#sed -i 's/"urxvt -e "/"yourterm -e "/' desktop-exec.c
 	make
 }
 
