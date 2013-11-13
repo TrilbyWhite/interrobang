@@ -13,7 +13,6 @@
 #define OPT_PATH	0x04
 #define OPT_DESK	0x10
 #define OPT_DCOM	0x20
-#define OPT_DEXE	0x40
 
 static const char *pre, *str;
 static const char deskchar = '>';
@@ -37,37 +36,6 @@ static int get_name(const char *path,int opt) {
 	if (!dir) return 1;
 	while ( (de=readdir(dir)) ) {
 		if (de->d_name[0] == '.') continue;
-		if (opt & OPT_DEXE) {
-			name = strdup(de->d_name);
-			if ( (c=strrchr(name,'.')) ) *c='\0';
-			if (strncmp(name,str,strlen(name))) continue;
-			if ( !(str[strlen(name)] == ' ' || str[strlen(name)] == '\0') )
-				continue;
-			f = fopen(de->d_name,"r");
-			while(fgets(line,MAX_LINE,f)) {
-				if (strncmp(line,"Exec=",5)==0) exec=strdup(line+5);
-				if (strncmp(line,"Terminal=true",13)==0) term=1;
-			}
-			fclose(f);
-			if (name) { free(name); name=NULL; }
-			if (!exec) return 1;
-			if ( (c2=strstr(exec,"%u")) ) {	
-				*(++c2) = 's';
-				if ( (c=strchr(str,' ')) ) {
-					c++;
-					name = calloc(strlen(exec)+strlen(c)+2,sizeof(char));
-					sprintf(name,exec,c);
-				}
-				else {
-					name = calloc(strlen(exec)+2,sizeof(char));
-					sprintf(name,exec,"");
-				}
-				free(exec); exec=strdup(name); free(name); name=NULL;
-			}
-			if (term) printf("!term %s",exec);
-			else printf("%s",exec);
-			if (exec) {free(exec); exec=NULL;}
-		}
 		else if (opt & OPT_DESK) {
 			name = strdup(de->d_name);
 			if ( (c=strrchr(name,'.')) ) *c='\0';
@@ -79,7 +47,6 @@ static int get_name(const char *path,int opt) {
 				f = fopen(de->d_name,"r");
 				match = 0;
 				while(fgets(line,MAX_LINE,f)) {
-//prin	tf(":: (%s) %s",str,line);
 					if (	(strncmp(line,"Name",4)==0 ||
 							strncmp(line,"GenericName",11)==0) &&
 							(c=strchr(line,'=')) && c++ &&
@@ -146,12 +113,6 @@ static int from_desktops(int comments) {
 	return 0;
 }
 
-static int desk_exec() {
-	str++;
-	get_name("/usr/share/applications",OPT_DEXE);
-	return 0;
-}
-
 int main(int argc, const char **argv) {
 	int i;
 	if (argc < 3) return 1;
@@ -161,7 +122,6 @@ int main(int argc, const char **argv) {
 		if (strncmp(argv[i],"path",4)==0) from_path();
 		else if (strncmp(argv[i],"desktop+",9)==0) from_desktops(1);
 		else if (strncmp(argv[i],"desktop",8)==0) from_desktops(0);
-		else if (strncmp(argv[i],"deskexec",9)==0) desk_exec();
 	}
 	if (i == 1) from_path();
 	return 0;
