@@ -12,11 +12,14 @@ ${ALTER}: ${ALTER}.c
 ${PROG}: ${PROG}.c
 	@gcc -o ${PROG} ${PROG}.c ${CFLAGS} ${LDFLAGS} -DDESK_CHAR="'>'"
 
+desktop-exec: desktop-exec.c
+	@gcc -o desktop-exec desktop-exec.c
+
 debug: ${PROG}.c
 	@gcc -o -g ${PROG} ${PROG}.c ${CFLAGS} -DDEBUG
 
 clean:
-	@rm -rf ${PROG} ${ALTER}
+	@rm -rf ${PROG} ${ALTER} desktop-exec
 
 install: all
 	@install -Dm755 ${PROG} ${DESTDIR}${PREFIX}/bin/${PROG}

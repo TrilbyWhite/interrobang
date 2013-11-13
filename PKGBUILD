@@ -26,4 +26,6 @@ build() {
 package() {
 	cd "${srcdir}/$_gitname"
 	make PREFIX=/usr DESTDIR="${pkgdir}" install
+	#install -Dm755 desktop-exec ${pkgdir}/usr/bin/desktop-exec
 }
+
