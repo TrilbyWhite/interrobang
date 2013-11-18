@@ -438,7 +438,6 @@ static int main_loop() {
 }
 
 static int clean_up() {
-	if (shell != _shell) free(shell);
 	XFreeFontSet(dpy,xfs);
 	XFreeGC(dpy,bgc); XFreeGC(dpy,gc);
 	XDestroyIC(xic);
