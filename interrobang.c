@@ -264,9 +264,12 @@ static int options(int n,const char **opt, int cur, int x) {
 		for (i = j; i < n && wx < w; i++) {
 			lw = strrchr(opt[i],' ');
 			if (!lw || *(++lw) == '\0' || !last_word) lw = opt[i];
-			offset[i] = wx;
-			wx += XmbTextEscapement(xfs,lw,strlen(lw)) +
+			k = XmbTextEscapement(xfs,lw,strlen(lw)) +
 					XmbTextEscapement(xfs," ",1);
+			if (wx + k >= w)
+				break;
+			offset[i] = wx;
+			wx += k;
 		}
 		if (i > cur) break;
 	}
