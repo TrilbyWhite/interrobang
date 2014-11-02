@@ -129,5 +129,5 @@ There is NO WARRANTY, to the extent permitted by law.
 Submit bug reports via github: http://github.com/TrilbyWhite/interrobang.git
 
 I would like your feedback. If you enjoy *Interrobang*
-see the bottom of the site below for detauls on submitting comments: http://mccluresk9.com/software.html
+see the bottom of the site below for details on submitting comments: http://mccluresk9.com/software.html
 
