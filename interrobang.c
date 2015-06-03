@@ -44,7 +44,7 @@
 	"Hushbang:\n" \
 	"   Provide any bang (without bangchar) to have the\n" \
 	"   associated commmand executed on the input string\n\n" \
-	"See `man interrobang` for more information. (NOT YET AVAILABLE)\n"
+	"See `man interrobang` for more information.\n"
 
 #define MAX_LINE	240
 
