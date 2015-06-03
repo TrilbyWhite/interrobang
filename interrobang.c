@@ -287,8 +287,7 @@ static int word_rubout(int pos) {
 	char *word = line, *prev = line, *pos_ptr = line + pos, *ptr, *suffix;
 	for (ptr = line; ptr != pos_ptr; prev = ptr++)
 		if (*prev == ' ' && *ptr != ' ') word = ptr;
-	suffix = strdup(pos_ptr);
-	strcpy(word, suffix);
+	strcpy(word, suffix = strdup(pos_ptr));
 	free(suffix);
 	return word - line;
 }
