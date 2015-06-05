@@ -309,7 +309,10 @@ static int main_loop() {
 		if (stat == XBufferOverflow) continue;
 		if (e->state & Mod1Mask) continue;
 		if (e->state & ControlMask) {
-			if (key == 'w') pos = word_rubout(pos);
+			if (key == 'w') {
+				pos = word_rubout(pos);
+				compcheck = False;
+			}
 			if (key == 'u') line[(pos=0)] = '\0';
 			if (key == 'c') line[(pos=precomp)] = '\0';
 			if (key == 'a') {
