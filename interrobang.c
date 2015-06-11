@@ -283,6 +283,7 @@ static int options(int n,const char **opt, int cur, int x) {
 	free(offset);
 }
 
+#ifdef WORD_RUBOUT
 static int word_rubout(int pos) {
 	char *word = line, *prev = line, *pos_ptr = line + pos, *ptr, *suffix;
 	for (ptr = line; ptr != pos_ptr; prev = ptr++)
@@ -291,6 +292,7 @@ static int word_rubout(int pos) {
 	free(suffix);
 	return word - line;
 }
+#endif
 
 static int main_loop() {
 	XEvent ev; XKeyEvent *e; KeySym key;
@@ -309,10 +311,12 @@ static int main_loop() {
 		if (stat == XBufferOverflow) continue;
 		if (e->state & Mod1Mask) continue;
 		if (e->state & ControlMask) {
+#ifdef WORD_RUBOUT
 			if (key == 'w') {
 				pos = word_rubout(pos);
 				compcheck = False;
 			}
+#endif
 			if (key == 'u') line[(pos=0)] = '\0';
 			if (key == 'c') line[(pos=precomp)] = '\0';
 			if (key == 'a') {
