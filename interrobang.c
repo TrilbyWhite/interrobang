@@ -44,7 +44,7 @@
 	"Hushbang:\n" \
 	"   Provide any bang (without bangchar) to have the\n" \
 	"   associated commmand executed on the input string\n\n" \
-	"See `man interrobang` for more information. (NOT YET AVAILABLE)\n"
+	"See `man interrobang` for more information.\n"
 
 #define MAX_LINE	240
 
@@ -283,6 +283,17 @@ static int options(int n,const char **opt, int cur, int x) {
 	free(offset);
 }
 
+#ifdef WORD_RUBOUT
+static int word_rubout(int pos) {
+	char *word = line, *prev = line, *pos_ptr = line + pos, *ptr, *suffix;
+	for (ptr = line; ptr != pos_ptr; prev = ptr++)
+		if (*prev == ' ' && *ptr != ' ') word = ptr;
+	strcpy(word, suffix = strdup(pos_ptr));
+	free(suffix);
+	return word - line;
+}
+#endif
+
 static int main_loop() {
 	XEvent ev; XKeyEvent *e; KeySym key;
 	int breakcode=0, tx=0, i, compcount=0, compcur=0, len=0, pos=0;
@@ -300,6 +311,12 @@ static int main_loop() {
 		if (stat == XBufferOverflow) continue;
 		if (e->state & Mod1Mask) continue;
 		if (e->state & ControlMask) {
+#ifdef WORD_RUBOUT
+			if (key == 'w') {
+				pos = word_rubout(pos);
+				compcheck = False;
+			}
+#endif
 			if (key == 'u') line[(pos=0)] = '\0';
 			if (key == 'c') line[(pos=precomp)] = '\0';
 			if (key == 'a') {

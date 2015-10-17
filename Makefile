@@ -4,6 +4,8 @@ ALTER	=	percontation
 PREFIX	?=	/usr
 LDFLAGS	+=	-lX11
 
+# compile with -DWORD_RUBOUT to enable readline-like C-w key binding
+
 all: ${PROG} ${ALTER}
 
 ${ALTER}: ${ALTER}.c
