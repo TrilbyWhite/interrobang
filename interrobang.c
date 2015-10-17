@@ -66,7 +66,7 @@ static Bang *bangs;
 static Bool show_opts = False, last_word = False;
 static const char *hushstr = NULL;
 static char bangchar = '!', font[MAX_LINE] = "fixed",
-		line[MAX_LINE+4], bang[MAX_LINE], cmd[2*MAX_LINE],
+		line[MAX_LINE+4] = "", bang[MAX_LINE] = "", cmd[2*MAX_LINE],
 		completion[MAX_LINE], defaultcomp[MAX_LINE] = "",
 		shell_flags[10] = "-c", *run_hook = NULL,
  		*_shell = "/bin/sh", *shell = NULL;
@@ -357,7 +357,7 @@ static int main_loop() {
 			pos+=len;
 			compcheck = False;
 		}
-		if ( key == XK_Tab || key == XK_ISO_Left_Tab || 
+		if ( key == XK_Tab || key == XK_ISO_Left_Tab ||
 				key == XK_Down || key == XK_Up ||
 				( key != XK_Left && key != XK_Right &&
 				breakcode == 0 && autocomp > 0 && pos >= autocomp ) ) {
@@ -392,7 +392,7 @@ static int main_loop() {
 				sprintf(cmd,comp,prefix,sp);
 				compgen = popen(cmd,"r");
 				while (fgets(cmd,MAX_LINE,compgen) != NULL) {
-					if (strlen(cmd) < 4) continue;
+					if (strlen(cmd) < 2) continue;
 					cmd[strlen(cmd) - 1] = '\0'; /* trim newlines */
 					compcount++;
 					complist =
@@ -404,7 +404,7 @@ static int main_loop() {
 				compcur = -1;
 			}
 		}
-		if ( compcheck && (key == XK_Tab || key == XK_ISO_Left_Tab || 
+		if ( compcheck && (key == XK_Tab || key == XK_ISO_Left_Tab ||
 				key == XK_Down || key == XK_Up)) {
 			//if (compcur || pos == strlen(complist[compcur])) {
 				if ( key==XK_ISO_Left_Tab || key == XK_Up ) {
@@ -453,6 +453,7 @@ static int clean_up() {
 static int process_command() {
 	int i, x = 0; char *c, *b = NULL;
 	cmd[0] = '\0';
+printf("%s\n", line);
 	if (line[0] == DESK_CHAR) {
 		snprintf(cmd,MAX_LINE*2,"%cdesktop %s",bangchar,line+1);
 		strncpy(line,cmd,MAX_LINE); cmd[0] = '\0';
@@ -475,7 +476,7 @@ static int process_command() {
 	else {
 		if (hush > -1) sprintf(cmd,bangs[hush].command,line);
 		else strcpy(cmd,line);
-	} 
+	}
 	clean_up();
 	if (strlen(cmd) > 2) {
 		if (run_hook) {
