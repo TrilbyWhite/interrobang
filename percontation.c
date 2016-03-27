@@ -25,13 +25,20 @@ static int get_name(const char *path,int opt) {
 	struct stat info;
 	int opts, match, term=0;
 	char line[MAX_LINE], *name=NULL, *c, *c2, *exec=NULL;
+	char *fullpath;
+	const char *pwd = getenv("PWD");
 	if (path[0] == '\0') {
 		dir = opendir("/");
 		chdir("/");
 	}
 	else {
-		dir = opendir(path);
-		chdir(path);
+		if (path[0] == '/') fullpath = strdup(path);
+		else {
+			fullpath = (char*) malloc (strlen(pwd) + strlen(path) + 2);
+			sprintf(fullpath, "%s/%s", pwd, path);
+		}
+		dir = opendir(fullpath);
+		chdir(fullpath);
 	}
 	if (!dir) return 1;
 	while ( (de=readdir(dir)) ) {
@@ -88,7 +95,7 @@ static int from_path() {
 		get_name(next,OPT_EXEC);
 		next = delim+1;
 	}
-	if (str[0] == '/') {
+	if (strchr(str, '/') != NULL) {
 		path = strdup(str);
 		char *c = strrchr(path,'/');
 		*c = '\0';
