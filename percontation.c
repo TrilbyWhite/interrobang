@@ -32,13 +32,18 @@ static int get_name(const char *path,int opt) {
 		chdir("/");
 	}
 	else {
-		if (path[0] == '/') fullpath = strdup(path);
+		if (path[0] == '/') {
+			dir = opendir(path);
+			chdir(path);
+                }
 		else {
-			fullpath = (char*) malloc (strlen(pwd) + strlen(path) + 2);
+			fullpath = (char*) malloc(strlen(pwd) + strlen(path) + 2);
 			sprintf(fullpath, "%s/%s", pwd, path);
+
+			dir = opendir(fullpath);
+			chdir(fullpath);
+			free(fullpath);
 		}
-		dir = opendir(fullpath);
-		chdir(fullpath);
 	}
 	if (!dir) return 1;
 	while ( (de=readdir(dir)) ) {
