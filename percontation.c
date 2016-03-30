@@ -70,13 +70,13 @@ static int get_name(const char *path,int opt) {
 			else opts = opt;
 			printf(pre);
 			if (opts & OPT_PATH) printf("%s/",path);
-			if (opts & OPT_DIR) printf("%s/\n",de->d_name);
+			if (opts & OPT_DIR) printf("%s/%s/\n",path,de->d_name);
 			else printf("%s\n",de->d_name);
 		}
 	}
 	closedir(dir);
 	return 0;
-}	
+}
 
 static int from_path() {
 	char *path;
