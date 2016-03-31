@@ -84,11 +84,11 @@ int main(int argc, const char **argv) {
 	int i;
 	if (argc < 3) return 1;
 	for (i = 1; i < argc - 2; i++) {
-		if (!strncmp(argv[i],"path",4)) from_path(argc[argv-2],argc[argv-1]);
-		else if (!strncmp(argv[i],"desktop+",9)) from_desktop(1,argc[argv-1]);
-		else if (!strncmp(argv[i],"desktop",8)) from_desktop(0,argc[argv-1]);
+		if (!strncmp(argv[i],"path",4)) from_path(argv[argc-2],argv[argc-1]);
+		else if (!strncmp(argv[i],"desktop+",9)) from_desktop(1,argv[argc-1]);
+		else if (!strncmp(argv[i],"desktop",8)) from_desktop(0,argv[argc-1]);
 	}
-	if (i == 1) from_path(argc[argv-2],argc[argv-1]);
+	if (i == 1) from_path(argv[argc-2],argv[argc-1]);
 	return 0;
 }
 
