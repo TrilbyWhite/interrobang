@@ -24,6 +24,8 @@
 #include <stdarg.h>
 #include <locale.h>
 #include <string.h>
+#include <unistd.h>
+#include <ctype.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
@@ -55,7 +57,7 @@ typedef struct Bang {
 } Bang;
 
 static Display *dpy;
-static int nbangs,scr,fh,x=0,y=0,w=0,h=0;
+static int nbangs,scr,fh,x=0,y=0,w=0,h=0,top=0;
 static int hush=-1,autocomp=-1,bpx=1,margin=-80;
 static Window root, win;
 static Pixmap buf;
@@ -215,6 +217,7 @@ static int init_X() {
 	osgc = XCreateGC(dpy,root,GCForeground|GCBackground,&val);
 	fh = fss[0]->ascent;
 	if (!h) h = fh + fss[0]->descent;
+	else top = (h - fh - fss[0]->descent) / 2.0;
 	if (y == -2) y = DisplayHeight(dpy,scr) - h;
 	if (y == -1) y = (DisplayHeight(dpy,scr) - h)/2;
 	if (x == -1) x = (DisplayWidth(dpy,scr) - w)/2;
@@ -241,7 +244,7 @@ static int init_X() {
 			XNClientWindow, win, XNFocusWindow, win, NULL);
 	XMapWindow(dpy,win);
 	XFillRectangle(dpy,buf,bgc,0,0,w,h);
-	XDrawLine(dpy,buf,gc,5,2,5,fh);
+	XDrawLine(dpy,buf,gc,5,2+top,5,fh+top);
 	XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
 	XFlush(dpy);
 	if (autocomp == 0) {
@@ -278,7 +281,7 @@ static int options(int n,const char **opt, int cur, int x) {
 		lw = strrchr(opt[k],' ');
 		if (!lw || *(++lw) == '\0' || !last_word) lw = opt[k];
 		XmbDrawImageString(dpy,buf,xfs,(k==cur?osgc:ogc),
-				offset[k]+m,fh,lw,strlen(lw));
+				offset[k]+m,fh+top,lw,strlen(lw));
 	}
 	free(offset);
 }
@@ -352,15 +355,14 @@ static int main_loop() {
 			Atom type;
 			Window sel = XGetSelectionOwner(dpy, XA_PRIMARY);
 			if (sel) {
-				XConvertSelection(dpy,XA_PRIMARY,XA_STRING,None,sel,
-						CurrentTime);
+				XConvertSelection(dpy,XA_PRIMARY,XA_STRING,None,sel,CurrentTime);
 				XFlush(dpy);
 				XMaskEvent(dpy,SelectionNotify,&e);
-				XGetWindowProperty(dpy,sel,XA_STRING,0,256,False,
-						AnyPropertyType,
+				XGetWindowProperty(dpy,sel,XA_STRING,0,256,False,AnyPropertyType,
 						&type, &fmt, &len, &rem, &s);
 				if (s) {
 					strcat(line,s);
+					pos+=strlen(s);
 					XFree(s);
 				}
 			}
@@ -436,9 +438,9 @@ static int main_loop() {
 		}
 		/* draw */
 		XFillRectangle(dpy,buf,bgc,0,0,w,h);
-		XmbDrawString(dpy,buf,xfs,gc,5,fh,line,strlen(line));
+		XmbDrawString(dpy,buf,xfs,gc,5,fh+top,line,strlen(line));
 		tx = XmbTextEscapement(xfs,line,pos);
-		XDrawLine(dpy,buf,gc,tx+5,2,tx+5,fh);
+		XDrawLine(dpy,buf,gc,tx+5,2+top,tx+5,fh+top);
 		if (show_opts && compcheck)
 			options(compcount,(const char **)complist,compcur,tx);
 		XCopyArea(dpy,buf,win,gc,0,0,w,h,0,0);
@@ -503,11 +505,11 @@ printf("%s\n", line);
 		}
 		const char *argv[4]; argv[0] = shell; argv[1] = shell_flags;
 		argv[3] = NULL; argv[2] = cmd;
-		execv(argv[0],argv);
+		execv(argv[0], (char *const *) argv);
 	}
 }
 
-int main(int argc, const char **argv) {	
+int main(int argc, const char **argv) {
 	config(argc,argv);
 	init_X();
 	if (main_loop()) process_command();
