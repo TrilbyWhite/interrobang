@@ -472,7 +472,6 @@ static int clean_up() {
 static int process_command() {
 	int i, x = 0; char *c, *b = NULL;
 	cmd[0] = '\0';
-printf("%s\n", line);
 	if (line[0] == DESK_CHAR) {
 		snprintf(cmd,MAX_LINE*2,"%cdesktop %s",bangchar,line+1);
 		strncpy(line,cmd,MAX_LINE); cmd[0] = '\0';
@@ -497,7 +496,7 @@ printf("%s\n", line);
 		else strcpy(cmd,line);
 	}
 	clean_up();
-	if (strlen(cmd) > 2) {
+	if (strlen(cmd) > 0) {
 		if (run_hook) {
 			char *tmp = strdup(cmd);
 			snprintf(cmd,MAX_LINE*2,run_hook,tmp);
